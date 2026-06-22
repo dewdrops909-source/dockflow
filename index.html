@@ -1518,12 +1518,24 @@ async function load(){
   }
   if(raw==null) raw=lsGet();           // offline mode, or empty room first run
   try{ if(raw) STATE=JSON.parse(raw); }catch(e){ /* first run */ }
-  if(!STATE.icms) STATE.icms=[];
-  if(!STATE.icmSeq) STATE.icmSeq=1;
-  if(!STATE.archive) STATE.archive=[];
+  normalizeState();
   const m=STATE.masters;
   const empty=!m || ((!m.sizes||!m.sizes.length) && (!m.docks||!m.docks.length));
   if(empty){ STATE.masters=JSON.parse(JSON.stringify(DEFAULT_MASTERS)); mastersSeeded=true; }
+}
+
+// Firebase does not store empty arrays — they come back as undefined. After any
+// load/sync that replaces STATE, restore every expected field so .push/.filter
+// never crash. This is the single source of truth for STATE shape.
+function normalizeState(){
+  if(!STATE || typeof STATE!=='object') STATE={};
+  if(!Array.isArray(STATE.vehicles)) STATE.vehicles=[];
+  if(!Array.isArray(STATE.history))  STATE.history=[];
+  if(!Array.isArray(STATE.icms))     STATE.icms=[];
+  if(!Array.isArray(STATE.archive))  STATE.archive=[];
+  if(!Array.isArray(STATE.alerts))   STATE.alerts=[];
+  if(typeof STATE.seq!=='number')    STATE.seq=1;
+  if(typeof STATE.icmSeq!=='number') STATE.icmSeq=1;
 }
 
 // Live listener: when ANOTHER device writes, update our STATE + re-render.
@@ -1539,8 +1551,7 @@ function attachLiveSync(){
       // masters are locally authoritative if this device just seeded/edited them
       FB_APPLYING=true;
       STATE=next;
-      if(!STATE.icms) STATE.icms=[];
-      if(!STATE.archive) STATE.archive=[];
+      normalizeState();
       lastSig=sig;
       render(); renderSyncBadge();
       FB_APPLYING=false;
@@ -4389,7 +4400,7 @@ async function sync(){
     const inCount=((inM.sizes||[]).length)+((inM.docks||[]).length);
     let keptMasters=false;
     if(localCount>0 && inCount<localCount){ incoming.masters=localM; keptMasters=true; }
-    STATE=incoming; lastSig=sig; render(); renderSyncBadge();
+    STATE=incoming; normalizeState(); lastSig=sig; render(); renderSyncBadge();
     if(keptMasters){ save(); }
   }catch(e){}
 }
