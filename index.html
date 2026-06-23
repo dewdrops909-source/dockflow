@@ -468,245 +468,350 @@
     background:linear-gradient(180deg,var(--blue-sky),var(--blue-deep))}
   .sectiontitle .ln{flex:1;height:1px;background:var(--line-soft)}
 
+  /* ============================================================================
+     ┌────────────────────────────────────────────────────────────────────────┐
+     │  MOBILE — designed per view (not one row stretched everywhere).          │
+     │  Constant LEFT:  ● status dot · PLATE · vendor                           │
+     │  RIGHT = each screen's most-critical output, or its action.             │
+     │  Actions hug the right edge (thumb-reachable). Phone-only; desktop kept. │
+     │                                                                          │
+     │   Overview·OnDock → when docks FREE UP (ETA to clear)                    │
+     │   Live Board      → waiting-queue forecast (pred. wait + dock)           │
+     │   Call to Action  → the BLOCKER + the next action on the right           │
+     │   All Vehicles    → current stage; tap → timeline                        │
+     │   Security        → triage; Move-to-Yard on the right of the alert row   │
+     └────────────────────────────────────────────────────────────────────────┘
+     ============================================================================ */
   @media(max-width:760px){
+    /* ---- mobile tokens ---- */
+    :root{
+      --m-pad:13px; --m-radius:11px;
+      --m-anchor:15px;   /* plate */
+      --m-sub:12px;      /* vendor subtitle */
+      --m-out:12.5px;    /* the critical output on the right */
+      --m-label:9.5px;   /* mono micro-label */
+      --m-tap:42px;      /* min tap target */
+    }
+
+    /* ---------- shell ---------- */
     main{padding:12px}
-    .roles{order:3;width:100%;justify-content:space-between}
+    header{padding:13px 14px}
+    .brand h1{font-size:15px;line-height:1.15}
+    .brand p{font-size:8.5px;letter-spacing:.5px}
+    .logo{width:36px;height:36px;font-size:16px}
+    .roles{order:3;width:100%;justify-content:space-between;margin-top:2px}
     .roles button{flex:1;padding:9px 8px;font-size:12px}
-    .clock{display:none}
-    .qmeta{display:none}
-    /* tighter stat cards everywhere */
+    .clock,.qmeta{display:none}
+
+    /* ---------- stat cards ---------- */
     .stats{grid-template-columns:repeat(2,1fr);gap:9px}
     .stat{padding:11px}
     .stat .k{font-size:9.5px;letter-spacing:.7px}
     .stat .n{font-size:21px;margin-top:4px}
     .stat .u{font-size:10px}
-    /* 3-up stat rows (overview/masters) collapse to 2 cleanly */
     .stats[style*="repeat(3"]{grid-template-columns:repeat(3,1fr)!important}
-    /* panels & sections */
+
+    /* ---------- panels / sections ---------- */
     .panel .head{padding:12px 13px}
     .panel .head h2{font-size:12px}
     .panel .body{padding:13px}
     .sectiontitle{margin:18px 2px 10px}
     .sectiontitle h3{font-size:13px}
-    /* subtabs scroll horizontally instead of wrapping into a block */
+
+    /* ---------- sub-tabs ---------- */
     .subtabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
     .subtabs::-webkit-scrollbar{display:none}
     .subtabs button{flex:none;padding:9px 13px;font-size:12.5px;white-space:nowrap}
-    /* queue / action rows wrap their controls neatly */
-    .qitem{flex-wrap:wrap;gap:9px;padding:11px}
-    .qactions{width:100%;justify-content:flex-start}
-    /* compact buttons on mobile */
+
+    /* ---------- buttons ---------- */
     button.btn{padding:11px 14px;font-size:13px}
     button.btn.sm{padding:8px 10px;font-size:12px}
-    /* lists scroll sideways, never garble */
-    .listwrap{-webkit-overflow-scrolling:touch}
-    /* gate entry / forms full width spacing */
-    .row2{grid-template-columns:1fr 1fr;gap:10px}
-  }
-  @media(max-width:430px){
-    .stats{grid-template-columns:repeat(2,1fr)}
-    .stat .n{font-size:19px}
-    .brand h1{font-size:15px}
-    .brand p{font-size:8.5px;letter-spacing:.5px}
-    .logo{width:34px;height:34px;font-size:16px}
-    .mexp-grid{grid-template-columns:1fr}
-    .row2{grid-template-columns:1fr}
-  }
-  /* ============================================================
-     MOBILE CARD LAYOUT — CTA board only (warehouse's main phone screen).
-     Turns the sideways-scrolling CTA rows into clean stacked cards.
-     Other list screens (shift log, security, live board) are untouched
-     and will get their own passes.
-     ============================================================ */
-  @media(max-width:760px){
-    /* header tidy */
-    header{padding:12px 14px;gap:10px}
-    .brand h1{font-size:15px;line-height:1.15}
-    .logo{width:36px;height:36px}
-    .roles{margin-top:2px}
 
-    /* CTA lists: no sideways scroll, headers hidden (cards self-label) */
-    #cta_queue .listwrap,#cta_hold .listwrap,#cta_yard .listwrap{overflow:visible}
-    .cta-row{min-width:0!important}
-    #cta_queue .cta-head,#cta_hold .cta-head,#cta_yard .cta-head{display:none!important}
+    /* ====================================================================
+       SHARED FOUNDATION for every list row.
+       Reset the desktop .vrow (44px height, 560px min-width, nowrap,
+       sideways scroll) so each mobile view lays out on its own terms.
+       The shared identity: status dot (::before via state class) + plate
+       (.c-veh, mono anchor) + vendor (.c-ven, muted subtitle).
+       ==================================================================== */
+    .listwrap{max-height:none!important;overflow:visible!important;border-radius:0!important}
+    .vhead{display:none!important}                       /* rows self-describe */
+    .vrow{
+      height:auto!important;min-width:0!important;white-space:normal!important;
+      gap:0!important;padding:0!important;border-bottom:none!important;
+      font-size:var(--m-sub)!important;
+    }
+    .vrow>span{overflow:visible;white-space:normal;text-overflow:clip;min-width:0}
 
-    /* each CTA row → card */
-    .cta-row{
-      display:grid!important;
-      grid-template-columns:1fr auto;
-      gap:7px 10px;
-      align-items:center;
-      padding:13px 14px!important;
-      border:1px solid var(--line);
-      border-radius:12px;
-      background:linear-gradient(180deg,var(--panel),var(--panel2));
-      margin-bottom:10px;
-      box-shadow:var(--shadow-sm);
-    }
-    .cta-row.is-ready{box-shadow:inset 3px 0 0 var(--green),var(--shadow-sm)}
-    /* vehicle no. = card title across the top */
-    .cta-row .c-veh{
-      grid-column:1 / -1;flex:none!important;
-      font-size:15px!important;font-weight:800;
-      display:flex;align-items:center;gap:7px;flex-wrap:wrap;
-      padding-bottom:8px;border-bottom:1px solid var(--line-soft);
-    }
-    /* position chip rides at the start of the title row */
-    .cta-row .c-pos{
-      grid-column:1 / -1;justify-self:start;order:-1;
-      flex:none!important;width:auto;background:var(--panel3);
-      border:1px solid var(--line);border-radius:7px;padding:3px 10px;
-      font:700 11px var(--mono);margin-bottom:2px;
-    }
-    .cta-row .c-pos.next{color:var(--amber);border-color:rgba(255,176,32,.5)}
-    /* labelled secondary fields */
-    .cta-row .c-ven,.cta-row .c-sz,.cta-row .c-zone2,.cta-row .c-pap,
-    .cta-row .c-status,.cta-row .c-reason,.cta-row .c-docks{
-      flex:none!important;width:auto;min-width:0;font-size:13px;
-    }
-    .cta-row .c-ven{grid-column:1 / -1;color:var(--ink);font-weight:600}
-    .cta-row .c-ven::before{content:"Vendor · ";color:var(--dim);font-weight:600;font-size:11px}
-    .cta-row .c-sz{grid-column:1}
-    .cta-row .c-sz::before{content:"Size · ";color:var(--dim);font-size:11px}
-    .cta-row .c-reason{grid-column:1 / -1}
-    /* zone + papers controls: full-width, tappable */
-    .cta-row .c-zone2,.cta-row .c-pap{grid-column:1 / -1;display:flex;align-items:center;gap:8px}
-    .cta-row .c-zone2::before{content:"Zone";color:var(--dim);font-size:11px;flex:0 0 46px}
-    .cta-row .c-pap::before{content:"Papers";color:var(--dim);font-size:11px;flex:0 0 46px}
-    .cta-row select{flex:1 1 auto;min-height:42px;font-size:13px}
-    .cta-row .seg{flex:1 1 auto}
-    /* status / waiting message full width */
-    .cta-row .c-status{grid-column:1 / -1}
-    /* action button: full-width, big tap target */
-    .cta-row .c-send,.cta-row .c-docks{grid-column:1 / -1;display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
-    .cta-row .c-send .cta-send,.cta-row .c-send button{
-      flex:1 1 auto;min-height:46px;font-size:14px!important;padding:12px 14px!important;border-radius:10px;
-    }
-    /* dock-assignment chips wrap as a tappable grid */
-    .cta-row .c-docks .dchip{min-height:42px;display:inline-flex;align-items:center;padding:0 13px;font-size:13px}
-    /* driver phone button stays inline & small in the title */
-    .cta-row .c-veh .drv-btn{flex:0 0 auto}
+    /* the three shared parts, used by the grid in each view below */
+    .vrow .c-veh{font:800 var(--m-anchor) var(--mono)!important;color:var(--ink);
+      display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .vrow .c-ven{font-size:var(--m-sub);font-weight:600;color:var(--muted);
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .vrow .c-ven::before{display:none}                   /* never show "Vendor" label */
 
-    /* CTA dock cards: 2-up, cleaner */
-    .dockgrid{grid-template-columns:1fr 1fr!important;gap:10px}
-    .dcard{padding:12px}
-    .dcard-timer{font-size:21px}
-  }
-  @media(max-width:430px){
-    .dockgrid{grid-template-columns:1fr!important}
-    .cta-row .c-veh{font-size:14.5px!important}
-    .cta-row .c-sz{grid-column:1 / -1}
-  }
-  /* ============================================================
-     MOBILE CARD LAYOUT — All Vehicles shift log (.logrow)
-     ============================================================ */
-  @media(max-width:760px){
-    #todaylist .listwrap,#grnpending_list .listwrap{overflow:visible}
-    #todaylist .vhead,#grnpending_list .vhead{display:none!important}
-    .logrow{min-width:0!important}
-    .logrow{
-      display:grid!important;
-      grid-template-columns:1fr auto;
-      gap:8px 10px;align-items:center;
-      padding:13px 14px!important;
-      border:1px solid var(--line);border-radius:12px;
-      background:linear-gradient(180deg,var(--panel),var(--panel2));
-      margin-bottom:10px;box-shadow:var(--shadow-sm);
+    /* ====================================================================
+       OVERVIEW · ON DOCK  →  "when does each dock free up?"
+       Layout:  ● plate           DOCK · frees ~Xm
+                  vendor
+       Right side leads with the ETA (the supply-side forecast).
+       ==================================================================== */
+    #ov_docklist .vhead{display:none!important}
+    #ov_docklist .vrow:not(.vhead){
+      display:grid;grid-template-columns:1fr auto;align-items:center;gap:1px 12px;
+      padding:var(--m-pad) 6px var(--m-pad) var(--m-pad)!important;
+      border-bottom:1px solid var(--line-soft)!important;
     }
-    /* title row: SL/Q chips + vehicle no. */
-    .logrow .c-veh{
-      grid-column:1 / -1;flex:none!important;
-      font-size:15px!important;font-weight:800;
-      display:flex;align-items:center;gap:7px;flex-wrap:wrap;
-      padding-bottom:8px;border-bottom:1px solid var(--line-soft);
-    }
-    .logrow .c-sl{grid-column:1;justify-self:start;order:-2;flex:none!important;width:auto;
-      background:var(--panel3);border:1px solid var(--line);border-radius:6px;padding:2px 8px;font-size:10.5px;color:var(--dim)}
-    .logrow .c-sl::before{content:"#"}
-    .logrow .c-q{grid-column:auto;justify-self:start;order:-1;flex:none!important;width:auto;
-      background:var(--panel3);border:1px solid var(--line);border-radius:6px;padding:2px 8px;font-size:10.5px;color:var(--blue-sky)}
-    .logrow .c-q::before{content:"Q ";color:var(--dim)}
-    /* secondary fields, labelled */
-    .logrow .c-ven,.logrow .c-sz2,.logrow .c-t,.logrow .c-wt,.logrow .c-stage{
-      flex:none!important;width:auto;font-size:13px;
-    }
-    .logrow .c-ven{grid-column:1 / -1;color:var(--ink);font-weight:600}
-    .logrow .c-ven::before{content:"Vendor · ";color:var(--dim);font-weight:600;font-size:11px}
-    .logrow .c-sz2{grid-column:1}
-    .logrow .c-sz2::before{content:"Size · ";color:var(--dim);font-size:11px}
-    .logrow .c-t{grid-column:2;justify-self:end}
-    .logrow .c-t::before{content:"In · ";color:var(--dim);font-size:11px}
-    .logrow .c-wt{grid-column:1}
-    .logrow .c-wt::before{content:"Waited · ";color:var(--dim);font-size:11px}
-    .logrow .c-stage{grid-column:2;justify-self:end;text-align:right}
-    /* status tracker spans full width, sits prominent */
-    .logrow .c-track{grid-column:1 / -1;flex:none!important;width:auto;margin:2px 0 0;
-      padding-top:8px;border-top:1px solid var(--line-soft)}
-    /* GRN button full-width tappable at the bottom */
-    .logrow .c-grn{grid-column:1 / -1;flex:none!important;width:auto;display:flex;gap:8px;margin-top:2px}
-    .logrow .c-grn .grnbtn{flex:1 1 auto;min-height:44px;font-size:13px;border-radius:9px}
-    .logrow .c-grn .grn-set{display:flex;gap:8px;flex:1 1 auto}
-    .logrow .c-grn .grn-na{flex:1 1 auto;text-align:center;color:var(--dim)}
-    /* the ▸ expand chevron stays inline in the title */
-    .logrow .veh-toggle{flex:0 0 auto}
-  }
-  /* ============================================================
-     MOBILE CARD LAYOUT — Live Board tables (#bd_queue, #bd_hold)
-     Tables become stacked cards via data-label.
-     ============================================================ */
-  @media(max-width:760px){
-    #bd_queue,#bd_hold{min-width:0!important}
+    #ov_docklist .c-veh{grid-column:1;grid-row:1}
+    #ov_docklist .c-ven{grid-column:1;grid-row:2}
+    #ov_docklist .c-dk{grid-column:2;grid-row:1;justify-self:end}
+    #ov_docklist .c-dk .locpill{font-size:9px;padding:2px 7px}
+    #ov_docklist .c-eta{grid-column:2;grid-row:2;justify-self:end}
+    #ov_docklist .eta{font:700 var(--m-out) var(--mono);color:var(--green)}
+    #ov_docklist .eta.over{color:var(--red)}
+    #ov_docklist .ov-dockrow.is-over{background:rgba(255,93,108,.06)}
+    #ov_docklist .c-sz,#ov_docklist .c-t{display:none!important}
+
+    /* ====================================================================
+       LIVE BOARD  →  waiting-queue forecast (demand side)
+       Layout:  ● plate            predicted DOCK time
+                  vendor           predicted wait
+       ==================================================================== */
+    #bd_queue,#bd_hold{min-width:0!important;display:block;width:100%}
     #bd_queue thead,#bd_hold thead{display:none}
     #bd_queue tbody,#bd_hold tbody{display:block}
     #bd_queue tr,#bd_hold tr{
-      display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;
-      padding:13px 14px;margin-bottom:10px;
-      border:1px solid var(--line);border-radius:12px;
-      background:linear-gradient(180deg,var(--panel),var(--panel2));box-shadow:var(--shadow-sm);
+      display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:1px 12px;
+      padding:var(--m-pad) 8px var(--m-pad) var(--m-pad);
+      border-bottom:1px solid var(--line-soft);background:transparent;
     }
-    #bd_queue td,#bd_hold td{
-      display:flex;flex-direction:column;gap:2px;border:none!important;padding:0!important;font-size:13px;
+    #bd_queue tr::before,#bd_hold tr::before{
+      content:"";grid-column:1;grid-row:1 / span 2;align-self:center;
+      width:9px;height:9px;border-radius:50%;background:var(--blue-sky);box-shadow:0 0 8px var(--blue-sky);
     }
-    #bd_queue td::before,#bd_hold td::before{
-      content:attr(data-label);color:var(--dim);font:600 10px var(--mono);letter-spacing:.4px;text-transform:uppercase;
-    }
-    /* vehicle = full-width title, no label, bigger */
+    #bd_hold tr::before{background:var(--red);box-shadow:0 0 8px var(--red)}
+    #bd_queue td,#bd_hold td{display:inline;border:none!important;padding:0!important;margin:0;font-size:12px;color:var(--muted)}
+    #bd_queue td::before,#bd_hold td::before{content:none!important}
     #bd_queue td[data-label="Vehicle"],#bd_hold td[data-label="Vehicle"]{
-      grid-column:1 / -1;font-size:15px;font-weight:800;
-      padding-bottom:8px!important;border-bottom:1px solid var(--line-soft)!important;
-      flex-direction:row;align-items:center;gap:7px;flex-wrap:wrap;
+      grid-column:2;grid-row:1;font:800 var(--m-anchor) var(--mono);color:var(--ink);
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    #bd_queue td[data-label="Predicted Dock"]{grid-column:3;grid-row:1;justify-self:end;font:700 13px var(--mono)!important;color:var(--ink)}
+    #bd_queue td[data-label="Vendor"],#bd_hold td[data-label="Vendor"]{
+      grid-column:2;grid-row:2;font-size:12px;color:var(--muted);font-weight:600;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    #bd_queue td[data-label="Predicted Wait"]{grid-column:3;grid-row:2;justify-self:end;font:600 11px var(--mono)!important;color:var(--dim)}
+    #bd_hold td[data-label="Hold Reason"]{grid-column:2 / -1;grid-row:2;font-size:11px;color:var(--amber);
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    #bd_hold td[data-label="Stage"]{grid-column:3;grid-row:1;justify-self:end;font:600 11px var(--mono)!important;color:var(--dim)}
+    #bd_queue td[data-label="#"],#bd_queue td[data-label="Stage"],
+    #bd_queue td[data-label="Gate Entry"],#bd_queue td[data-label="Waited"],
+    #bd_queue td[data-label="Est. Unload"],
+    #bd_hold td[data-label="Gate Entry"],#bd_hold td[data-label="Waited"]{display:none!important}
+
+    /* ====================================================================
+       ALL VEHICLES  →  current stage; tap to expand the timeline
+       Layout:  ● plate            STAGE
+                  vendor           size
+                  └ line tracker (gate→dock→released→GRN), full width
+       ==================================================================== */
+    #todaylist .vrow,#grnpending_list .vrow{min-width:0!important}
+    .logrow{
+      display:grid!important;grid-template-columns:1fr auto;align-items:center;gap:1px 12px;
+      height:auto!important;min-height:0!important;
+      padding:var(--m-pad) 8px var(--m-pad) var(--m-pad)!important;
+      border-bottom:1px solid var(--line-soft)!important;background:transparent!important;
+      box-shadow:none!important;margin:0!important;cursor:pointer;
     }
-    #bd_queue td[data-label="Vehicle"]::before,#bd_hold td[data-label="Vehicle"]::before{display:none}
-    /* vendor + stage span full width */
-    #bd_queue td[data-label="Vendor"],#bd_hold td[data-label="Vendor"],
-    #bd_queue td[data-label="Stage"],#bd_hold td[data-label="Stage"],
-    #bd_hold td[data-label="Hold Reason"]{grid-column:1 / -1}
-    /* the # index becomes a small chip on the title row */
-    #bd_queue td[data-label="#"]{
-      grid-column:1 / -1;flex-direction:row;align-items:center;
-      font-size:11px;color:var(--dim);
+    .logrow.expanded{background:rgba(47,127,255,.05)!important}
+    /* status dot removed — the line tracker already shows status. */
+    .logrow .c-ven{grid-column:1;grid-row:1;font-size:var(--m-anchor)!important;font-weight:700;color:var(--ink)}
+    .logrow .c-stage{grid-column:2;grid-row:1;justify-self:end;font-size:11px!important;font-weight:700;
+      text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
+    .logrow .c-veh{grid-column:1;grid-row:2;font-size:12px!important;font-weight:600;color:var(--muted);
+      padding:0!important;border:none!important}
+    .logrow .veh-toggle{flex:0 0 auto;color:var(--dim);font-size:10px}
+    .logrow .c-sz2{grid-column:2;grid-row:2;justify-self:end;font:600 11px var(--mono);color:var(--dim)}
+    .logrow .c-track{display:flex!important;grid-column:1 / -1;grid-row:3;width:100%;flex:0 0 auto!important;
+      margin-top:8px;padding-top:8px;border-top:1px solid var(--line-soft);overflow:visible}
+    .logrow .c-track .track{width:100%;padding:6px 4px 2px}
+    /* mobile tracker: bigger, clearer nodes so all 4 stages incl. GRN read well */
+    .logrow .c-track .node-dot{width:16px;height:16px}
+    .logrow .c-track .node-lbl{font-size:9px}
+    .logrow .c-track .track-line{top:13px;left:14px;right:14px}
+    .logrow .c-sl,.logrow .c-q,.logrow .c-t,.logrow .c-wt,.logrow .c-grn{display:none!important}
+    .logrow.row-sla{background:rgba(255,176,32,.06)!important}
+    .logdetail-wrap{padding:0 16px 12px 16px!important;background:rgba(47,127,255,.04)}
+    /* GRN action lives in the expanded detail panel on mobile */
+    .logdetail .ld-grn-action{display:flex;gap:8px;margin-top:10px}
+    .logdetail .ld-grn-action .grnbtn{flex:1 1 auto;min-height:42px;font-size:13px;border-radius:9px}
+
+    /* ====================================================================
+       SECURITY · GATE  →  triage; action on the right of the alert row
+       Layout:  ● plate  📞        [ Move to Yard ]
+                  vendor · location
+       ==================================================================== */
+    #allvehicles .vhead{display:none!important}          /* header hidden (ID-specific, beats the grid rule) */
+    #allvehicles .vrow:not(.vhead){
+      display:grid!important;grid-template-columns:auto 1fr auto;align-items:center;gap:2px 10px;
+      padding:var(--m-pad) 10px var(--m-pad) var(--m-pad)!important;
+      border-bottom:1px solid var(--line-soft)!important;
+      border-left:none!important;            /* drop the left status stripe — the dot shows status */
     }
-    #bd_queue td[data-label="#"]::before{content:"Queue #";}
-  }
-  /* ============================================================
-     MOBILE POLISH — Gate entry form + Overview + general
-     ============================================================ */
-  @media(max-width:760px){
-    /* 16px inputs prevent iOS auto-zoom on focus; taller = easier to tap */
-    input,select,textarea{font-size:16px!important;padding:13px 13px}
+    #allvehicles .vrow.alerted{box-shadow:none!important;background:rgba(255,93,108,.05)!important}  /* no green stripe; red dot + faint tint */
+    #allvehicles .c-alert{grid-column:1;grid-row:1 / span 2;align-self:center;display:flex}
+    #allvehicles .alight{width:9px;height:9px;border-radius:50%;background:var(--dim)}
+    #allvehicles .alight.on{background:var(--red);box-shadow:0 0 8px var(--red);animation:holdBlink 1.15s ease-in-out infinite}
+    #allvehicles .c-veh{grid-column:2;grid-row:1}
+    #allvehicles .c-act{grid-column:3;grid-row:1 / span 2;align-self:center;justify-self:end;
+      flex:0 0 auto!important;width:auto!important;display:flex;justify-content:flex-end}
+    #allvehicles .c-act .btn{font-size:12.5px;padding:8px 12px;min-height:var(--m-tap);white-space:nowrap;border-radius:9px}
+    #allvehicles .c-act>span{color:var(--dim);font-size:13px}   /* the "—" no-action marker, quiet */
+    #allvehicles .c-act:empty{display:none}
+    #allvehicles .c-ven{grid-column:2;grid-row:2;font-size:var(--m-sub);font-weight:600;color:var(--muted);
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    /* location pill sits at the right of the vendor line (under the action) */
+    #allvehicles .c-loc{grid-column:2 / -1;grid-row:2;justify-self:end;align-self:center;display:inline-flex;pointer-events:none}
+    #allvehicles .c-loc .locpill{font-size:9px;padding:2px 7px}
+    #allvehicles .c-veh .drv-btn{flex:0 0 auto;min-height:0;padding:1px 6px}
+    #allvehicles .drv-none{font-size:10px;color:var(--dim)}
+
+    /* ====================================================================
+       CALL TO ACTION  →  the acting screen. Card per vehicle.
+       Header line: ● plate ……………… [ ACTION on the right ]
+       Then the BLOCKER (what's stopping it), then only the controls
+       that vehicle needs (zone / papers for waiting; dock for yard).
+       Symbols: ☀️ ambient · ❄️ chiller · ✓ ok · ⏸ hold.
+       ==================================================================== */
+    #cta_queue .listwrap,#cta_hold .listwrap,#cta_yard .listwrap{overflow:visible}
+    .cta-row{
+      display:grid!important;
+      grid-template-columns:1fr auto;            /* identity | action */
+      align-items:center;gap:9px 10px;
+      height:auto!important;min-height:0!important;
+      padding:13px!important;
+      border:1px solid var(--line);border-left:3px solid var(--blue-azure);
+      border-radius:var(--m-radius);
+      background:linear-gradient(180deg,var(--panel),var(--panel2));
+      margin-bottom:9px;box-shadow:var(--shadow-sm);
+    }
+    .cta-row.is-ready{border-left-color:var(--green)}
+    .cta-row.hold-row{border-left-color:var(--red)}
+    .cta-row>*{min-width:0;box-sizing:border-box;margin:0!important}
+    /* reset desktop flex-basis (would force tall blocks) */
+    .cta-row .c-veh,.cta-row .c-ven,.cta-row .c-sz,.cta-row .c-status,
+    .cta-row .c-zone2,.cta-row .c-pap,.cta-row .c-send,.cta-row .c-pos,.cta-row .c-docks{flex:0 0 auto!important}
+
+    /* row 1: #pos + plate (left)  ·  primary action (right) */
+    .cta-row .c-veh{grid-column:1;grid-row:1;
+      font:800 var(--m-anchor) var(--mono)!important;color:var(--ink);
+      display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+    .cta-row .c-pos{order:-1;align-self:center;width:auto!important;
+      background:var(--panel3);color:var(--muted);border:1px solid var(--line);border-radius:6px;
+      padding:1px 7px;font:700 10px var(--mono);letter-spacing:.5px}
+    .cta-row .c-pos::before{content:"#"}
+    .cta-row .c-pos.next{color:var(--amber);border-color:rgba(255,176,32,.5)}
+    /* the action sits on the right edge, spanning the card's rows */
+    .cta-row .c-send{grid-column:2;grid-row:1 / span 2;align-self:center;justify-self:end;
+      display:flex;justify-content:flex-end}
+    .cta-row .c-send .cta-send,.cta-row .c-send button{
+      min-height:var(--m-tap);font-size:13px!important;font-weight:700;padding:10px 14px!important;
+      border-radius:9px;white-space:nowrap}
+
+    /* row 2: vendor · size  (quiet subtitle, no labels) */
+    .cta-row .c-ven{grid-column:1;grid-row:2;
+      font-size:var(--m-sub);font-weight:600;color:var(--muted);
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .cta-row .c-ven::before{display:none}
+    .cta-row .c-ven::after{content:" ·  " attr(data-size);color:var(--dim);font-weight:600}
+    .cta-row .c-sz{display:none!important}
+
+    /* row 3: the BLOCKER — what's stopping this vehicle (full width, prominent) */
+    .cta-row .c-status{grid-column:1 / -1;grid-row:3;font-size:12px}
+    .cta-row .c-status:empty{display:none}
+
+    /* row 4+: only the controls this vehicle needs (full width) */
+    .cta-row .c-zone2,.cta-row .c-pap{grid-column:1 / -1;display:flex;align-items:center;gap:8px}
+    .cta-row .c-zone2{grid-row:4}
+    .cta-row .c-pap{grid-row:5}
+    .cta-row .c-zone2::before,.cta-row .c-pap::before{
+      font:600 var(--m-label) var(--mono);letter-spacing:.3px;text-transform:uppercase;color:var(--dim);flex:0 0 44px}
+    .cta-row .c-zone2::before{content:"Zone"}
+    .cta-row .c-pap::before{content:"Papers"}
+    /* zone toggles with ☀️/❄️ symbols */
+    .cta-row .segmini{display:inline-flex;gap:5px;flex:1 1 auto}
+    .cta-row .segmini .segb{flex:1 1 auto;min-height:38px;font-size:12.5px;
+      display:inline-flex;align-items:center;justify-content:center;gap:5px}
+    .cta-row .segmini .segb[data-z="ambient"]::before{content:"\2600\FE0F";font-size:13px}
+    .cta-row .segmini .segb[data-z="chiller"]::before{content:"\2744\FE0F";font-size:13px}
+    /* papers ✓ / ⏸ symbols only */
+    .cta-row .c-pap .segb{font-size:0!important;gap:0;min-width:46px}
+    .cta-row .c-pap .segb::before{font-size:16px;line-height:1}
+    .cta-row .c-pap .segb[data-pap="ok"]::before{content:"\2713"}
+    .cta-row .c-pap .segb[data-pap="hold"]::before{content:"\23F8"}
+    .cta-row .c-pap .papna{font-size:11px;color:var(--dim)}
+    /* zone pill (yard card) → ☀️/❄️ symbol, no "Zone" label */
+    .cta-row .c-zone2 .zpill{font-size:0;padding:3px 8px;gap:0}
+    .cta-row .c-zone2 .zpill::before{font-size:14px;line-height:1}
+    .cta-row .c-zone2 .zpill.zamb::before{content:"\2600\FE0F"}
+    .cta-row .c-zone2 .zpill.zchl::before{content:"\2744\FE0F"}
+    .cta-row .c-zone2:has(.zpill)::before{display:none}
+    .cta-row .c-zone2:has(.zpill){gap:0;grid-row:4}
+    /* yard card: ASSIGN DOCK — a clear, full-width labelled action row.
+       Recommended dock (★) is the filled primary button; others are
+       secondary. Each is a proper tap target so it's obviously tappable. */
+    .cta-row .c-docks{
+      grid-column:1 / -1;grid-row:4;
+      display:flex;flex-wrap:wrap;align-items:center;gap:7px;
+    }
+    .cta-row .c-docks::before{
+      content:"Assign dock \25B8";          /* "Assign dock ▸" label */
+      flex:0 0 100%;
+      font:700 var(--m-label) var(--mono);letter-spacing:.4px;text-transform:uppercase;
+      color:var(--blue-sky);margin-bottom:3px;
+    }
+    .cta-row .c-docks .dockchips{display:flex;flex-wrap:wrap;gap:7px;width:100%;justify-content:flex-start}
+    .cta-row .c-docks .dchip{
+      min-height:var(--m-tap);display:inline-flex;align-items:center;justify-content:center;
+      padding:0 16px;font-size:13.5px;font-weight:700;border-radius:9px;
+      border:1px solid var(--blue-sky);background:rgba(47,127,255,.12);color:var(--blue-sky);
+    }
+    /* the recommended dock = the obvious primary choice (filled green) */
+    .cta-row .c-docks .dchip.rec{
+      background:linear-gradient(180deg,#34e4a0,#1fc78c);border-color:#34e4a0;color:#04241a;
+      box-shadow:0 0 10px rgba(52,228,160,.4);
+    }
+    /* en-route state: clear status text, not a button */
+    .cta-row .c-docks .yard-enroute{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--amber);font-weight:600}
+    .cta-row .c-docks:has(.yard-enroute)::before{display:none}   /* no "assign" label while moving */
+    .cta-row .c-veh .drv-btn{flex:0 0 auto}
+    /* hold card: reason is the blocker line */
+    .cta-row .c-reason{grid-column:1 / -1;grid-row:3;font-size:12px;color:var(--amber)}
+
+    /* CTA dock cards (the Docks sub-tab) */
+    .dockgrid{grid-template-columns:1fr 1fr!important;gap:12px}
+    .dcard{padding:12px}
+    .dcard-timer{font-size:21px}
+
+    /* ====================================================================
+       GATE ENTRY FORM + inputs
+       ==================================================================== */
+    input,select,textarea{font-size:16px!important;padding:13px 13px}   /* 16px stops iOS zoom */
     .field label{font-size:12px}
-    /* gate form: single column is cleaner on a phone */
     .row2{grid-template-columns:1fr;gap:0}
-    /* purpose / segmented toggles full width & tappable */
     .seg-btn{min-height:44px;font-size:13px}
     #f_purpose_seg{display:flex;gap:8px}
     #f_purpose_seg .seg-btn{flex:1 1 auto}
-    /* primary submit button: full width, prominent */
     #f_submit,.gate-submit{width:100%;min-height:50px;font-size:15px}
-    /* overview stat cards a touch bigger */
-    .stat .n{font-size:22px}
-    /* validity indicators readable */
+    #f_time{width:100%;max-width:100%;box-sizing:border-box;text-align:left;-webkit-appearance:none;appearance:none;font-size:15px!important}
+    #f_time::-webkit-date-and-time-value{text-align:left;margin:0}
     .veh-fmt,.veh-hint{font-size:11.5px}
+  }
+  @media(max-width:430px){
+    .stat .n{font-size:19px}
+    .mexp-grid{grid-template-columns:1fr}
+    .logrow .c-ven,#bd_queue td[data-label="Vehicle"],#bd_hold td[data-label="Vehicle"],
+    #ov_docklist .c-veh,#allvehicles .c-veh,.cta-row .c-veh{font-size:14px!important}
+    .dockgrid{grid-template-columns:1fr!important}
   }
   .twocol{display:grid;grid-template-columns:1.05fr .95fr;gap:16px}
   @media(max-width:920px){.twocol{grid-template-columns:1fr}}
@@ -1494,12 +1599,17 @@ function syncMode(){ return FB_READY ? 'live' : 'local'; }
 
 function initFirebase(){
   if(!firebaseConfigured()){ return false; }
+  // If the Firebase library didn't load (e.g. file opened directly off disk,
+  // or no internet), fall back to local/offline mode quietly — no error spam.
+  if(typeof firebase==='undefined' || !firebase.initializeApp){
+    return false;
+  }
   try{
     if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
     FB=firebase.database();
     FB_REF=FB.ref('rooms/'+FIREBASE_ROOM+'/state');
     return true;
-  }catch(e){ console.error('Firebase init failed',e); return false; }
+  }catch(e){ console.warn('Firebase unavailable — running in local mode'); return false; }
 }
 
 // local fallback
@@ -1656,11 +1766,12 @@ function updateAlertSound(){
   } else if(_beepTimer){ clearInterval(_beepTimer); _beepTimer=null; }
 }
 function fmtClock(ts){
-  return new Date(ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  // always show IST so every device displays the same time (matches IST day-logic)
+  return new Date(ts).toLocaleTimeString('en-IN',{timeZone:'Asia/Kolkata',hour:'2-digit',minute:'2-digit',hour12:true});
 }
 function fmtDateTime(ts){
   if(!ts) return '—';
-  return new Date(ts).toLocaleString([],{month:'short',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+  return new Date(ts).toLocaleString('en-IN',{timeZone:'Asia/Kolkata',month:'short',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:true});
 }
 
 /* ============================================================
@@ -2601,7 +2712,7 @@ function renderOverview(){
     statCard('Waiting >24h',over24,'needs attention')
   ].join('');
 
-  // vehicles on dock — tight single line
+  // ON DOCK — Overview's job: when does each dock free up?
   const onDock=docked().slice().sort((a,b)=>a.placedAt-b.placedAt);
   const dc=document.getElementById('ov_dockcount');
   if(dc) dc.textContent=onDock.length+(onDock.length===1?' vehicle':' vehicles');
@@ -2610,19 +2721,24 @@ function renderOverview(){
     if(!onDock.length){ dl.innerHTML=emptyMsg('🅿️','No vehicles on dock','Vehicles placed at a dock will appear here.'); }
     else{
       dl.innerHTML=
-        '<div class="listwrap"><div class="vrow vhead">'+
+        '<div class="listwrap"><div class="vrow vhead ov-dockhead">'+
           '<span class="c-veh">Vehicle</span><span class="c-ven">Vendor</span>'+
-          '<span class="c-sz">Size</span><span class="c-dk">Dock</span><span class="c-t">Unloading</span>'+
+          '<span class="c-dk">Dock</span><span class="c-eta">Frees in</span>'+
         '</div>'+
         onDock.map(v=>{
-          const elapsed=now()-v.placedAt, est=estimateUnload(v)*60000, over=elapsed>est;
+          const est=estimateUnload(v)*60000;
+          const freeIn=(v.placedAt+est)-now();      // ms until it clears
+          const over=freeIn<0;
           const dkcls=v.zone==='chiller'?'loc-chl':'loc-amb';
-          return `<div class="vrow${agedCls(v)}">
+          // critical output = ETA to clear (right side)
+          const eta = over
+            ? `<span class="eta over" data-placed="${v.placedAt}" data-est="${est}">over</span>`
+            : `<span class="eta" data-placed="${v.placedAt}" data-est="${est}">~${fmtMin(Math.round(freeIn/60000))}</span>`;
+          return `<div class="vrow ov-dockrow${over?' is-over':''}${agedCls(v)}">
             <span class="c-veh mono" title="${esc(v.veh)}">${esc(v.veh)} ${cargoTag(v)}${agedBadge(v)}</span>
             <span class="c-ven" title="${esc(v.vendor)}">${esc(v.vendor)}</span>
-            <span class="c-sz">${esc(v.size)}</span>
             <span class="c-dk"><span class="locpill ${dkcls}">${v.dock}</span></span>
-            <span class="c-t mono ${over?'over':''}" data-placed="${v.placedAt}" data-est="${est}">${fmtDur(elapsed)}</span>
+            <span class="c-eta">${eta}</span>
           </div>`;
         }).join('')+'</div>';
     }
@@ -2778,7 +2894,7 @@ function ctaYardRow(v,plan){
   }
   return `<div class="vrow cta-row${agedCls(v)}">
     <span class="c-veh mono" title="${esc(v.veh)}">${esc(v.veh)} ${cargoTag(v)}${agedBadge(v)}</span>
-    <span class="c-ven" title="${esc(v.vendor)}">${esc(v.vendor)}${v.icm&&v.dest?' · '+esc(v.dest):''}</span>
+    <span class="c-ven" data-size="${esc(v.size||'—')}" title="${esc(v.vendor)}">${esc(v.vendor)}${v.icm&&v.dest?' · '+esc(v.dest):''}</span>
     <span class="c-sz">${esc(v.size)}</span>
     <span class="c-zone2"><span class="zpill ${zcls}">${v.zone}</span></span>
     <span class="c-docks">${docks}</span>
@@ -2808,11 +2924,11 @@ function ctaRow(v,i){
   if(v.icm||v.papers==='na'){
     pap=`<span class="papna" title="ICM Forward — internal movement, no inbound papers">N/A</span>`;
   }else if(v.papers==='ok'){
-    pap=`<button class="segb on okp" data-cta="paperToggle" data-id="${v.id}" title="Papers OK — tap to put on hold">OK &#10003;</button>`;
+    pap=`<button class="segb on okp" data-pap="ok" data-cta="paperToggle" data-id="${v.id}" title="Papers OK — tap to put on hold">&#10003; OK</button>`;
   }else{
     pap=`<span class="segmini">
-        <button class="segb okp" data-cta="paperOk" data-id="${v.id}">OK</button>
-        <button class="segb holdp" data-cta="paperHold" data-id="${v.id}">Hold</button>
+        <button class="segb okp" data-pap="ok" data-cta="paperOk" data-id="${v.id}" title="Papers OK">&#10003; OK</button>
+        <button class="segb holdp" data-pap="hold" data-cta="paperHold" data-id="${v.id}" title="Put papers on hold">&#9208; Hold</button>
       </span>`;
   }
 
@@ -2834,7 +2950,7 @@ function ctaRow(v,i){
   return `<div class="vrow cta-row${ready?' is-ready':''}${agedCls(v)}">
     <span class="c-pos ${i===0?'next':''}">${i+1}</span>
     <span class="c-veh mono" title="${esc(v.veh)}${v.driver?' · '+esc(v.driver):''}">${esc(v.veh)}${flagInline}${agedBadge(v,true)}</span>
-    <span class="c-ven" title="${esc(v.vendor)}">${esc(v.vendor)}${v.icm&&v.dest?' · '+esc(v.dest):''}</span>
+    <span class="c-ven" data-size="${esc(v.size||'—')}" title="${esc(v.vendor)}">${esc(v.vendor)}${v.icm&&v.dest?' · '+esc(v.dest):''}</span>
     <span class="c-sz">${esc(v.size||'—')}</span>
     <span class="c-status">${statusHTML}</span>
     <span class="c-zone2">${zoneHTML}</span>
@@ -3454,6 +3570,7 @@ function renderToday(){
          <span class="tlrow-ts">${reached&&ts?fmtDateTime(ts):'—'}</span>
        </div>`).join('');
     const grnState = v.grn==='done'?'GRN done':v.grn==='hold'?'GRN on hold':(grnEligible(v)?'GRN pending':'GRN n/a');
+    const grnAction = grnEligible(v) ? `<div class="ld-grn-action">${grnCell(v)}</div>` : '';
     return `<div class="logdetail">
       <div class="logdetail-head">
         <span class="ld-veh mono">${esc(v.veh)}</span>
@@ -3461,6 +3578,7 @@ function renderToday(){
         <span class="ld-grn">${grnState}</span>
       </div>
       <div class="tltable">${rows}</div>
+      ${grnAction}
       ${v.fifoOverride?`<div class="ld-fifo"><span class="ld-fifo-tag">OFT</span> Sent out of FIFO turn${v.fifoOverride.ahead?' (ahead of '+esc(v.fifoOverride.ahead)+')':''} — <em>${esc(v.fifoOverride.reason||'no reason')}</em></div>`:''}
     </div>`;
   };
