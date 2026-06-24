@@ -33,6 +33,48 @@
   }
   *{box-sizing:border-box}
   html,body{margin:0;height:100%}
+  /* ============ LOGIN GATE ============ */
+  .login-overlay{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;
+    padding:24px;background:var(--bg);}
+  .login-overlay[hidden]{display:none}
+  .login-card{width:100%;max-width:380px;background:var(--panel);
+    border:1px solid var(--line);border-radius:18px;padding:34px 28px;box-shadow:0 20px 60px rgba(0,0,0,.5);text-align:center}
+  .login-field{text-align:left;margin-bottom:14px}
+  .login-field label{display:block;font:700 11px var(--mono);letter-spacing:.4px;text-transform:uppercase;color:var(--blue-sky);margin-bottom:6px}
+  .login-field input{width:100%;box-sizing:border-box;padding:12px 13px;font-size:15px;color:var(--ink);
+    background:var(--panel2);border:1px solid var(--line);border-radius:10px;outline:none}
+  .login-field input:focus{border-color:var(--blue-sky);box-shadow:0 0 0 3px rgba(47,127,255,.18)}
+  .login-err{color:var(--red);font-size:12.5px;font-weight:600;margin-bottom:12px;text-align:left}
+  .login-err[hidden]{display:none}
+  .logout-btn{background:rgba(255,93,108,.12);border:1px solid rgba(255,93,108,.4);color:#ff8a99;
+    font:700 12px var(--sans);padding:7px 13px;border-radius:9px;cursor:pointer;white-space:nowrap;margin-left:10px}
+  .logout-btn:hover{background:rgba(255,93,108,.2)}
+  .logout-btn[hidden]{display:none}
+  body.role-security #roles{display:none!important}
+  /* ---- minimal neon wordmark (blue, app theme; one calm glow, no flicker) ---- */
+  .neon-wrap{margin-bottom:28px}
+  .neon-logo{position:relative;width:58px;height:58px;margin:0 auto 16px;border-radius:14px;
+    display:flex;align-items:center;justify-content:center;
+    font:800 25px var(--mono);color:#eaf6ff;letter-spacing:1px;
+    background:rgba(47,127,255,.10);
+    box-shadow:0 0 12px rgba(94,194,255,.35)}
+  /* rotating light that travels around the border */
+  .neon-logo::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1.5px;
+    background:conic-gradient(from var(--ang,0deg),
+      transparent 0deg, transparent 250deg,
+      rgba(94,194,255,.5) 300deg, #5ec2ff 340deg, #aee6ff 358deg, #5ec2ff 360deg);
+    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor;mask-composite:exclude;
+    animation:neonTrace 3.4s linear infinite}
+  .neon-logo::after{content:"";position:absolute;inset:0;border-radius:inherit;
+    border:1px solid rgba(94,194,255,.22);pointer-events:none}
+  @property --ang{syntax:'<angle>';inherits:false;initial-value:0deg}
+  @keyframes neonTrace{to{--ang:360deg}}
+  .neon-title{font:800 28px var(--sans);letter-spacing:1px;line-height:1.1}
+  .neon-gnsc{color:#eaf6ff;text-shadow:0 0 10px rgba(94,194,255,.65)}
+  .neon-flow{color:var(--blue-sky);text-shadow:0 0 10px rgba(47,127,255,.55)}
+  .neon-tag{margin-top:9px;font:700 9px var(--mono);letter-spacing:2.5px;color:var(--dim)}
+  @media(prefers-reduced-motion:reduce){ .neon-logo::before{animation:none;--ang:330deg} }
   body{
     background:
       radial-gradient(1200px 600px at 80% -10%, rgba(47,127,255,.22) 0%, transparent 62%),
@@ -55,11 +97,19 @@
   }
   .brand{display:flex;align-items:center;gap:12px;margin-right:auto}
   .logo{
-    width:38px;height:38px;border-radius:10px;flex:none;
-    background:linear-gradient(135deg,var(--ambient),var(--chiller));
-    display:grid;place-items:center;font-weight:800;color:#04101f;font-size:17px;
-    box-shadow:0 4px 14px rgba(61,165,255,.3);letter-spacing:-.02em;
+    position:relative;width:38px;height:38px;border-radius:10px;flex:none;
+    background:rgba(47,127,255,.10);
+    display:grid;place-items:center;font-weight:800;color:#eaf6ff;font-size:17px;
+    letter-spacing:-.02em;box-shadow:0 0 10px rgba(94,194,255,.3);
   }
+  /* moving light tracing the header logo border (same effect as the login tile) */
+  .logo::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1.4px;pointer-events:none;
+    background:conic-gradient(from var(--ang,0deg),
+      transparent 0deg, transparent 250deg,
+      rgba(94,194,255,.5) 300deg, #5ec2ff 340deg, #aee6ff 358deg, #5ec2ff 360deg);
+    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor;mask-composite:exclude;
+    animation:neonTrace 3.4s linear infinite}
   .brand h1{font-size:15.5px;margin:0;letter-spacing:-.01em;font-weight:800}
   .brand-site{color:var(--blue-sky);font-weight:700}
   .brand p{margin:1px 0 0;font-size:10px;color:var(--dim);font-family:var(--mono);letter-spacing:.8px;white-space:nowrap}
@@ -1226,6 +1276,27 @@
 </head>
 <body>
 
+<!-- ============ LOGIN GATE ============ -->
+<div id="login_overlay" class="login-overlay">
+  <div class="login-card">
+    <div class="neon-wrap">
+      <div class="neon-logo">DF</div>
+      <div class="neon-title"><span class="neon-gnsc">GNSC</span> <span class="neon-flow">DockFlow</span></div>
+      <div class="neon-tag">INBOUND CONTROL</div>
+    </div>
+    <div class="login-field">
+      <label>Username</label>
+      <input id="login_user" autocomplete="username" autocapitalize="none" placeholder="warehouse or security">
+    </div>
+    <div class="login-field">
+      <label>Password</label>
+      <input id="login_pass" type="password" autocomplete="current-password" placeholder="password">
+    </div>
+    <div id="login_err" class="login-err" hidden>Incorrect username or password</div>
+    <button class="btn" id="login_btn" style="width:100%" onclick="doLogin()">Sign In</button>
+  </div>
+</div>
+
 <header class="top">
   <div class="brand">
     <div class="logo">DF</div>
@@ -1239,6 +1310,7 @@
     <button data-r="security">Security · Gate</button>
     <button data-r="warehouse" class="active">Warehouse</button>
   </div>
+  <button class="logout-btn" id="logout_btn" onclick="doLogout()" title="Sign out" hidden>Log out</button>
 </header>
 
 <main>
@@ -1592,6 +1664,65 @@ function dockAccepts(dockId,size){ const d=dockDef(dockId); if(!d)return false; 
 const KEY='dockflow:v1';
 let STATE={ vehicles:[], history:[], seq:1, icms:[], icmSeq:1, masters:null };
 let role='warehouse';
+
+/* ============ LOGIN / ROLE GATE ============
+   Lightweight per-device sign-in. NOTE: this gates the UI for a trusted team;
+   it is not hardened security (credentials live in the file). */
+const ACCOUNTS = {
+  admin:     { pass:'admin123',     role:'admin'     },
+  warehouse: { pass:'warehouse123', role:'warehouse' },
+  security:  { pass:'security123',  role:'security'  }
+};
+const AUTH_KEY = 'dockflow_auth';
+
+function applyRole(r){
+  role = r;
+  const isAdmin = r==='admin';
+  // admin can see/use the toggle; warehouse & security are locked to their own view
+  document.body.classList.toggle('role-security', r==='security');
+  document.body.classList.toggle('role-admin', isAdmin);
+  // the visible view is warehouse/security; admin defaults to warehouse but may toggle
+  const view = (r==='security') ? 'security' : 'warehouse';
+  document.querySelectorAll('#roles button').forEach(x=>x.classList.toggle('active',x.dataset.r===view));
+  document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.dataset.view===view));
+  const lo=document.getElementById('logout_btn'); if(lo) lo.hidden=false;
+  if(view==='security'){ try{ ensureAudio(); renderSecAlerts(); }catch(e){} }
+  try{ updateAlertSound(); }catch(e){}
+}
+
+function doLogin(){
+  const u=(document.getElementById('login_user').value||'').trim().toLowerCase();
+  const p=document.getElementById('login_pass').value||'';
+  const acct=ACCOUNTS[u];
+  const err=document.getElementById('login_err');
+  if(!acct || acct.pass!==p){ if(err) err.hidden=false; return; }
+  if(err) err.hidden=true;
+  try{ localStorage.setItem(AUTH_KEY, JSON.stringify({user:u, role:acct.role})); }catch(e){}
+  document.getElementById('login_pass').value='';
+  document.getElementById('login_overlay').hidden=true;
+  applyRole(acct.role);
+}
+
+function doLogout(){
+  try{ localStorage.removeItem(AUTH_KEY); }catch(e){}
+  document.body.classList.remove('role-security');
+  const lo=document.getElementById('logout_btn'); if(lo) lo.hidden=true;
+  document.getElementById('login_user').value='';
+  document.getElementById('login_pass').value='';
+  document.getElementById('login_overlay').hidden=false;
+}
+
+function checkAuth(){
+  let saved=null;
+  try{ saved=JSON.parse(localStorage.getItem(AUTH_KEY)||'null'); }catch(e){}
+  if(saved && ACCOUNTS[saved.user]){
+    document.getElementById('login_overlay').hidden=true;
+    applyRole(saved.role);
+  } else {
+    document.getElementById('login_overlay').hidden=false;
+  }
+}
+
 let lastSig='';
 let storageWarned=false;
 
@@ -1774,7 +1905,9 @@ function beepOnce(){
   o.start(); o.stop(ctx.currentTime+0.34);
 }
 function updateAlertSound(){
-  const onGate = (typeof role!=='undefined') && role==='security';
+  // beep when the SECURITY GATE view is on screen (security role, or admin viewing it)
+  const secView=document.querySelector('.view[data-view="security"]');
+  const onGate = secView ? secView.classList.contains('active') : (role==='security');
   const hasAlerts = activeAlerts().length>0;
   if(onGate && hasAlerts){
     if(!_beepTimer){ beepOnce(); _beepTimer=setInterval(beepOnce, 1600); }   // repeat until dismissed
@@ -4516,12 +4649,21 @@ function tick(){
 /* ---------- role switching ---------- */
 document.getElementById('roles').addEventListener('click',e=>{
   const b=e.target.closest('button'); if(!b)return;
-  role=b.dataset.r;
+  if(role!=='admin') return;                // only admin may switch views
+  const view=b.dataset.r;
   document.querySelectorAll('#roles button').forEach(x=>x.classList.toggle('active',x===b));
-  document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.dataset.view===role));
-  if(role==='security'){ ensureAudio(); renderSecAlerts(); }
+  document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.dataset.view===view));
+  if(view==='security'){ ensureAudio(); renderSecAlerts(); }
   updateAlertSound();
 });
+
+// login: submit on Enter
+['login_user','login_pass'].forEach(id=>{
+  const el=document.getElementById(id);
+  if(el) el.addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
+});
+// check saved session on load (gate the app)
+checkAuth();
 
 // warehouse sub-tabs
 document.getElementById('wh_subtabs').addEventListener('click',e=>{
