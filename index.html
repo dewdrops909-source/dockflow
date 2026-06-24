@@ -966,8 +966,16 @@
     border-radius:7px;padding:2px 7px;cursor:pointer;vertical-align:middle;transition:.12s}
   .drv-btn:hover{background:rgba(94,194,255,.28)}
   .drv-btn.on{background:var(--blue-azure);border-color:var(--blue-sky);box-shadow:0 0 8px rgba(47,127,255,.6)}
-  .drv-num{font:700 12px var(--mono);color:var(--blue-sky);margin-left:6px;
-    background:rgba(47,127,255,.12);border-radius:6px;padding:2px 8px;vertical-align:middle}
+  /* revealed driver number: floats above the row as a popup so it is never
+     clipped by the narrow vehicle column / hidden behind the vendor column */
+  .c-veh{position:relative}
+  .drv-num{position:absolute;left:0;bottom:calc(100% + 6px);z-index:60;white-space:nowrap;
+    font:700 13px var(--mono);color:var(--blue-sky);
+    background:var(--panel3);border:1px solid var(--blue-sky);border-radius:8px;padding:5px 11px;
+    box-shadow:0 6px 18px rgba(0,0,0,.5)}
+  .drv-num[hidden]{display:none}
+  .drv-num::after{content:"";position:absolute;left:14px;top:100%;
+    border:5px solid transparent;border-top-color:var(--blue-sky)}
   .drv-none{font-size:11px;color:var(--dim);vertical-align:middle;margin-left:2px}
   /* color-coded location pills */
   .locpill{display:inline-flex;align-items:center;font:700 9.5px var(--mono);letter-spacing:.4px;
@@ -1242,6 +1250,14 @@
         <div class="head"><span class="dot" style="color:var(--ambient)"></span><h2>Gate Entry — Log Arriving Vehicle</h2></div>
         <div class="body">
           <div class="field">
+            <label>Purpose</label>
+            <div class="seg" id="f_purpose_seg">
+              <button type="button" class="seg-btn active" data-p="unloading" onclick="setPurpose('unloading')">Unloading</button>
+              <button type="button" class="seg-btn" data-p="loading" onclick="setPurpose('loading')">Loading · ICM Forward</button>
+            </div>
+            <input type="hidden" id="f_purpose" value="unloading">
+          </div>
+          <div class="field" id="f_gate_wrap">
             <label>Gate Entry Number <span style="color:var(--red)">*</span></label>
             <input id="f_gate" placeholder="e.g. GE-2041" autocomplete="off">
           </div>
@@ -1268,14 +1284,6 @@
               <label>Vehicle Size</label>
               <select id="f_size"></select>
             </div>
-          </div>
-          <div class="field">
-            <label>Purpose</label>
-            <div class="seg" id="f_purpose_seg">
-              <button type="button" class="seg-btn active" data-p="unloading" onclick="setPurpose('unloading')">Unloading</button>
-              <button type="button" class="seg-btn" data-p="loading" onclick="setPurpose('loading')">Loading · ICM Forward</button>
-            </div>
-            <input type="hidden" id="f_purpose" value="unloading">
           </div>
           <div class="field" id="f_dest_wrap" style="display:none">
             <label>Destination Commissary <span style="color:var(--red)">*</span></label>
@@ -1546,10 +1554,10 @@
 // Default masters — empty; defined by the user in the Masters tab.
 const DEFAULT_MASTERS = {
   // GNSC site configuration — vehicle types, docks, and standard unload times.
-  sizes: ['Courier','24ft','17ft','20ft','14ft','32ft','Veggies','ICM Forward','32 ft HQ'],
+  sizes: ['Courier','24ft','17ft','20ft','14ft','32ft','Veggies','32 ft HQ'],
   calc: {
     'Courier':0.5, '24ft':2.5, '17ft':2, '20ft':2, '14ft':1.5,
-    '32ft':3, 'Veggies':1.5, 'ICM Forward':3, '32 ft HQ':3.5
+    '32ft':3, 'Veggies':1.5, '32 ft HQ':3.5
   },
   docks: [
     { dock:'D15', zone:'ambient', types:['24ft','17ft','20ft','14ft'] },
@@ -1557,8 +1565,8 @@ const DEFAULT_MASTERS = {
     { dock:'D17', zone:'ambient', types:['24ft','17ft','20ft','14ft','32ft'] },
     { dock:'D18', zone:'ambient', types:[] },   // empty = accepts all types
     { dock:'D19', zone:'ambient', types:['Courier'] },
-    { dock:'D11', zone:'chiller', types:['32ft','Veggies','ICM Forward','24ft','32 ft HQ'] },
-    { dock:'D12', zone:'chiller', types:['24ft','Veggies','ICM Forward','32ft'] },
+    { dock:'D11', zone:'chiller', types:['32ft','Veggies','24ft','32 ft HQ'] },
+    { dock:'D12', zone:'chiller', types:['24ft','Veggies','32ft'] },
     { dock:'D13', zone:'chiller', types:['Courier','17ft','24ft','14ft','20ft','Veggies'] }
   ]
 };
@@ -1711,6 +1719,13 @@ function fmtDur(ms){
   if(ms<0)ms=0;
   const m=Math.floor(ms/60000), s=Math.floor((ms%60000)/1000);
   return m+':'+String(s).padStart(2,'0');
+}
+// dock dwell timer as HH:MM (hours:minutes) — clearer than mm:ss for unload/load time
+function fmtHHMM(ms){
+  if(ms<0)ms=0;
+  const total=Math.floor(ms/60000);
+  const hh=Math.floor(total/60), mm=total%60;
+  return String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0');
 }
 function fmtMin(m){
   m=Math.round(m);
@@ -2043,12 +2058,8 @@ function estimateUnload(v){
   if(bySize.n>=MIN_SAMPLES) return bySize.mean;
   const byVendor=learnStat(h=>h.vendor===v.vendor);
   if(byVendor.n>=MIN_SAMPLES) return byVendor.mean;
-  // not enough trusted data at any tier → use whatever partial signal exists, else calc std.
-  // blend size+vendor partials if both exist (60/40), else either, else calc standard.
-  if(bySize.mean!=null && byVendor.mean!=null) return bySize.mean*0.6 + byVendor.mean*0.4;
-  if(exact.mean!=null) return exact.mean;
-  if(bySize.mean!=null) return bySize.mean;
-  if(byVendor.mean!=null) return byVendor.mean;
+  // No tier has >= MIN_SAMPLES clean samples → learned average is NOT trusted yet.
+  // Use the master/calc standard until enough real data accumulates (>=10 samples).
   return calcMins(v.size);
 }
 // which tier is actually driving a vehicle's estimate (for display/confidence)
@@ -2071,7 +2082,20 @@ function estimateTier(v){
 const qt=v=>v.queueTime!=null?v.queueTime:v.gateTime; // FIFO key; bumped to back on requeue
 // Priority tier: veggies first, then ICM, then normal. FIFO (queue time) within a tier.
 const prio=v=>v.veggies?0:(v.icm?1:2);
-const queueCmp=(a,b)=>(prio(a)-prio(b))||(qt(a)-qt(b));
+// Manual FIFO override: when warehouse calls a vehicle out of turn, it gets an
+// override stamp. Overridden vehicles sort ahead of non-overridden ones (within
+// the same priority tier), most-recent override first — so the warehouse's chosen
+// sequence drives the queue number, display order, and Live Board predictions alike.
+const ovr=v=>(v.fifoOverride&&v.fifoOverride.at)?v.fifoOverride.at:0;
+const queueCmp=(a,b)=>{
+  if(prio(a)!==prio(b)) return prio(a)-prio(b);          // tier is a hard constraint
+  const oa=ovr(a), ob=ovr(b);
+  if(oa||ob){                                            // at least one was manually bumped
+    if(oa&&ob) return oa-ob;                             // both bumped → earlier bump ranks first
+    return oa? -1 : 1;                                   // a bumped → a first; else b first
+  }
+  return qt(a)-qt(b);                                    // normal FIFO by queue time
+};
 const waiting   =()=>STATE.vehicles.filter(v=>v.status==='waiting').sort(queueCmp);
 // "called" for warehouse/board = called-but-not-yet-docked (call_alert + yard)
 const called    =()=>STATE.vehicles.filter(v=>['call_alert','yard'].includes(v.status))
@@ -2174,12 +2198,16 @@ function setPurpose(p){
   document.getElementById('f_purpose').value=p;
   document.querySelectorAll('#f_purpose_seg .seg-btn').forEach(b=>b.classList.toggle('active',b.dataset.p===p));
   document.getElementById('f_dest_wrap').style.display = p==='loading' ? 'block' : 'none';
+  // ICM Forward (loading) is an internal movement — no inbound gate entry number
+  document.getElementById('f_gate_wrap').style.display = p==='loading' ? 'none' : 'block';
 }
 function logVehicle(){
   const gate=val('f_gate'),veh=normalizePlate(val('f_veh')),vendor=val('f_vendor'),
         driver=normalizeMobile(val('f_driver')),size=val('f_size'),timeStr=document.getElementById('f_time').value,
         purpose=document.getElementById('f_purpose').value, dest=val('f_dest');
-  if(!gate){toast('Gate entry number is required');document.getElementById('f_gate').focus();return;}
+  const isICM = purpose==='loading';
+  // Gate entry number is required for inbound unloading, but NOT for ICM Forward (internal)
+  if(!isICM && !gate){toast('Gate entry number is required');document.getElementById('f_gate').focus();return;}
   if(!veh){toast('Full vehicle number is required');document.getElementById('f_veh').focus();return;}
   if(!validPlate(veh)){
     toast('Invalid vehicle number format — expected e.g. DL01MA7981, DL1MA2713 or 22BH1234AA');
@@ -2259,12 +2287,15 @@ async function assignDock(id,dock){
     if(eligibleAhead.length){
       const first=eligibleAhead[0];
       if(!await askConfirm('Dock '+dock+' can also take '+first.veh+', which ranks ahead of '+v.veh+' (priority/FIFO).\nAssign '+v.veh+' anyway?','Assign anyway',true)) return;
+      // Acknowledged FIFO violation → stamp the override so the Live Board renumbers,
+      // reorders and recalculates with v ahead of the vehicle(s) it jumped.
+      v.fifoOverride={ reason:'Dock '+dock+' assigned ahead of '+first.veh, ahead:first.veh, at:now() };
     }
   }
   v.status='docked'; v.dock=dock; v.pendingDock=null; v.placedAt=now();
   v.alertUntil=now()+5*60000;
   if(v.icm) setICMStatus(v,'In Progress');   // loading has begun
-  addAlert('todock', v, 'Move '+v.veh+' from yard to dock '+dock);
+  // addAlert('todock', …) removed for now — dock assignment no longer pings Security.
   save();
   toast('Dock '+dock+' ▸ '+v.veh+(v.icm?' loading':' placed')); render();
 }
@@ -2279,7 +2310,7 @@ function finishUnload(id){
     });
   }
   v.status='awaiting'; v.finishedAt=now(); v.alertUntil=now()+10*60000;
-  addAlert('released', v, v.veh+(v.icm?' loaded':' unloaded')+' — ready for gate-out');
+  // addAlert('released', …) removed for now — gate-out readiness no longer pings Security.
   save();
   toast((v.icm?'Loaded ':'Unloaded ')+v.veh+' ('+fmtMin(dur)+') ▸ awaiting '+(v.icm?'depart':'gate out')); render();
 }
@@ -2516,6 +2547,7 @@ function overDockMins(v){
 // Released (unloaded/loaded) but GRN still not done 2h+ later.
 const GRN_SLA_MS=2*3600*1000;
 function overGRN(v){
+  if(!grnEligible(v)) return false;   // ICM Forward etc. never need GRN
   return v && (v.status==='awaiting'||v.status==='done') && v.grn!=='done' &&
     v.finishedAt && (now()-v.finishedAt) > GRN_SLA_MS;
 }
@@ -2868,7 +2900,7 @@ function ctaDockCard(dockId,zone){
     </div>
     <div class="dcard-veh mono">${esc(v.veh)}</div>
     <div class="dcard-sub">${v.icm?esc(v.dest):esc(v.vendor)} · ${esc(v.size)}</div>
-    <div class="dcard-timer ${over?'over':''}" data-placed="${v.placedAt}" data-est="${est}">${fmtDur(elapsed)}</div>
+    <div class="dcard-timer ${over?'over':''}" data-placed="${v.placedAt}" data-est="${est}">${fmtHHMM(elapsed)}</div>
     <div class="dcard-est">est ${fmtMin(estimateUnload(v))}${over?' · over estimate':''}</div>
     <div class="dcard-bar"><i style="width:${pct}%"></i></div>
     <button class="btn blue sm dcard-btn" data-cta="release" data-id="${v.id}">${v.icm?'Loaded &amp; Release':'Unloaded &amp; Release'}</button>
@@ -3488,7 +3520,8 @@ function renderToday(){
     if(['waiting','call_alert','yard'].includes(v.status)) return 0;
     if(v.status==='docked') return 1;
     if(v.status==='awaiting'||v.status==='done'){
-      return v.grn==='done' ? 3 : 2;     // released; GRN done pushes to node 4
+      if(!grnEligible(v)) return 2;        // ICM: final stage is Loaded (no GRN)
+      return v.grn==='done' ? 3 : 2;       // released; GRN done pushes to node 4
     }
     return 2;
   };
@@ -3524,17 +3557,25 @@ function renderToday(){
   // ===== Status tracker: Waiting → On Dock → Released → GRN =====
   // Connector line fills as the vehicle advances; current node pulses.
   // GRN node lights purple only when GRN is marked done; on GRN-hold it stays dark.
-  const STAGES=[
+  const STAGES_IN=[
     {key:'wait',label:'Waiting'},
     {key:'dock',label:'On Dock'},
     {key:'rel', label:'Released'},
     {key:'grn', label:'GRN'}
   ];
+  const STAGES_ICM=[
+    {key:'wait',label:'Waiting'},
+    {key:'dock',label:'On Dock'},
+    {key:'rel', label:'Loaded'}
+  ];
   const tracker=v=>{
-    const idx=stageIdx(v);                 // 0..3
+    const icm=!grnEligible(v);             // ICM Forward → no GRN stage
+    const STAGES=icm?STAGES_ICM:STAGES_IN;
+    const idx=stageIdx(v);                 // 0..3 (in) / 0..2 (icm)
     const held=v.papers==='hold';
     const grnHold=v.grn==='hold';          // GRN explicitly on hold
-    const fillPct=[0,33,66,100][idx];
+    const lastIdx=STAGES.length-1;
+    const fillPct=Math.round(Math.min(idx,lastIdx)/lastIdx*100);
     return `<span class="track${held?' is-held':''}" data-fill="${fillPct}">
       <span class="track-line"><span class="track-fill" style="width:${fillPct}%"></span></span>
       ${STAGES.map((s,k)=>{
@@ -4453,7 +4494,7 @@ function tick(){
   document.querySelectorAll('.dcard-timer[data-placed]').forEach(el=>{
     const placed=+el.dataset.placed,est=+el.dataset.est;
     const elapsed=now()-placed;
-    el.textContent=fmtDur(elapsed);
+    el.textContent=fmtHHMM(elapsed);
     el.classList.toggle('over',elapsed>est);
     const card=el.closest('.dcard'); if(card) card.classList.toggle('over',elapsed>est);
     const bar=card&&card.querySelector('.dcard-bar i');
@@ -4604,7 +4645,12 @@ async function markGRN(id,act){
   save(); renderToday(); renderOverview();
 }
 // a vehicle can have GRN actioned once it's unloaded/released (awaiting) or gated out (done)
-function grnEligible(v){ return v.status==='awaiting'||v.status==='done'; }
+function grnEligible(v){
+  // GRN is the inbound goods-receipt step. ICM Forward is an outbound internal
+  // movement — there is nothing to receive, so it never needs GRN.
+  if(v.icm || v.purpose==='loading') return false;
+  return v.status==='awaiting'||v.status==='done';
+}
 
 /* ---- Midnight rollover: archive gated-out vehicles out of live views ---- */
 function dailyRollover(){
