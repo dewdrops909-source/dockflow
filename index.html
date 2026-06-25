@@ -2343,7 +2343,7 @@ function logVehicle(){
   if(!isICM && !gate){toast('Gate entry number is required');document.getElementById('f_gate').focus();return;}
   if(!veh){toast('Full vehicle number is required');document.getElementById('f_veh').focus();return;}
   if(!validPlate(veh)){
-    toast('Invalid vehicle number format — expected e.g. DL01MA7981, DL1MA2713 or 22BH1234AA');
+    toast('Vehicle number must be 2 letters + 4 digits (e.g. DL01MA7981) or BH series (e.g. 22BH1234AA)');
     const el=document.getElementById('f_veh'); el.focus(); checkPlateField(); return;
   }
   const dupe=vehicleInside(veh);
@@ -2518,19 +2518,15 @@ function populateSizeDropdown(){
   if(cur&&sizes.includes(cur)) sel.value=cur;
 }
 
-/* ---------- Indian vehicle-number format check ----------
-   Accepts exactly three formats (case/space-insensitive); anything else is blocked:
-     • Standard : AA00AA0000   e.g. DL01MA7981
-     • Old      : AA00A0000    e.g. DL1MA2713
-     • BH series: 00BH0000AA   e.g. 22BH1234AA                                  */
-const PLATE_PATTERNS=[
-  /^[A-Z]{2}\d{1,2}[A-Z]{1,2}\d{4}$/,   // standard & old: AA0(0)A(A)0000  e.g. DL01MA7981, DL1MA2713
-  /^\d{2}BH\d{4}[A-Z]{2}$/              // Bharat (BH) series:   00BH0000AA  e.g. 22BH1234AA
-];
+/* ---------- vehicle-number format check ----------
+   Relaxed per ops. Accepts EITHER:
+     • 2 letters first + 4 digits last, anything between  (e.g. DL01MA7981)
+     • BH series: 00BH0000A(A)                            (e.g. 22BH1234AA)   */
 function normalizePlate(s){ return (s||'').toUpperCase().replace(/[\s-]/g,''); }
 function validPlate(s){
   const p=normalizePlate(s);
-  return PLATE_PATTERNS.some(rx=>rx.test(p));
+  return /^[A-Z]{2}.*\d{4}$/.test(p)        // 2 letters first, 4 digits last
+      || /^\d{2}BH\d{4}[A-Z]{1,2}$/.test(p); // BH (Bharat) series
 }
 // Indian mobile: exactly 10 digits, first digit 6–9. Strips spaces, +91 / 0 prefixes.
 function normalizeMobile(s){
@@ -2585,7 +2581,7 @@ function checkPlateField(){
       fb.className='veh-fmt ok'; fb.style.display='';
     }
   } else {
-    fb.innerHTML='✕ Not a valid plate — expected DL01MA7981, DL1MA2713 or 22BH1234AA';
+    fb.innerHTML='✕ Use 2 letters + 4 digits, or BH series';
     fb.className='veh-fmt bad'; fb.style.display='';
   }
 }
