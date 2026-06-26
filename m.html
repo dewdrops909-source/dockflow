@@ -79,6 +79,15 @@
     font:700 12px var(--sans);padding:7px 13px;border-radius:9px;cursor:pointer;white-space:nowrap}
   .logout-btn:hover{background:rgba(255,93,108,.2)}
   .logout-btn[hidden]{display:none}
+  .user-badge{display:inline-flex;align-items:center;gap:5px;font:700 11px var(--mono);letter-spacing:.4px;
+    text-transform:uppercase;color:var(--blue-sky);background:rgba(47,127,255,.12);
+    border:1px solid rgba(94,194,255,.35);border-radius:8px;padding:5px 10px;white-space:nowrap}
+  .user-badge[hidden]{display:none}
+  .user-badge::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green)}
+  /* Masters / Summary / Intelligence are admin-only — hidden for warehouse & security */
+  body:not(.role-admin) #wh_subtabs button[data-s="masters"],
+  body:not(.role-admin) #wh_subtabs button[data-s="summary"],
+  body:not(.role-admin) #wh_subtabs button[data-s="intel"]{display:none!important}
   /* security role: hide the role toggle so they cannot switch to Warehouse */
   body.role-security #roles{display:none!important}
   body{
@@ -1030,13 +1039,15 @@
   /* revealed driver number: floats above the row as a popup so it is never
      clipped by the narrow vehicle column / hidden behind the vendor column */
   .c-veh{position:relative}
-  .drv-num{position:absolute;left:0;bottom:calc(100% + 6px);z-index:60;white-space:nowrap;
+  .drv-num{position:absolute;left:0;top:calc(100% + 6px);z-index:80;white-space:nowrap;
     font:700 13px var(--mono);color:var(--blue-sky);
     background:var(--panel3);border:1px solid var(--blue-sky);border-radius:8px;padding:5px 11px;
     box-shadow:0 6px 18px rgba(0,0,0,.5)}
   .drv-num[hidden]{display:none}
-  .drv-num::after{content:"";position:absolute;left:14px;top:100%;
-    border:5px solid transparent;border-top-color:var(--blue-sky)}
+  .drv-btn.drv-empty{opacity:.5}
+  .drv-btn.drv-empty.on{background:rgba(255,255,255,.06);border-color:var(--dim);box-shadow:none}
+  /* the cell holding the reveal must not clip the popup */
+  #allvehicles .c-veh,.logrow .c-veh,.cta-row .c-veh{overflow:visible!important}
   .drv-none{font-size:11px;color:var(--dim);vertical-align:middle;margin-left:2px}
   /* color-coded location pills */
   .locpill{display:inline-flex;align-items:center;font:700 9.5px var(--mono);letter-spacing:.4px;
@@ -1321,6 +1332,7 @@
     <button data-r="security">Security · Gate</button>
     <button data-r="warehouse" class="active">Warehouse</button>
   </div>
+  <span class="user-badge" id="user_badge" hidden></span>
   <button class="logout-btn" id="logout_btn" onclick="doLogout()" title="Sign out" hidden>Log out</button>
 </header>
 
@@ -1697,6 +1709,17 @@ function applyRole(r){
   document.querySelectorAll('#roles button').forEach(x=>x.classList.toggle('active',x.dataset.r===view));
   document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.dataset.view===view));
   const lo=document.getElementById('logout_btn'); if(lo) lo.hidden=false;
+  // show who is logged in
+  const ub=document.getElementById('user_badge');
+  if(ub){ ub.textContent=r; ub.hidden=false; }
+  // non-admins must not sit on a restricted sub-tab — bounce them to Overview
+  if(!isAdmin){
+    const cur=document.querySelector('#wh_subtabs button.active');
+    if(cur && ['masters','summary','intel'].includes(cur.dataset.s)){
+      const ov=document.querySelector('#wh_subtabs button[data-s="overview"]');
+      if(ov) ov.click();
+    }
+  }
   if(view==='security'){ try{ ensureAudio(); renderSecAlerts(); }catch(e){} }
   try{ updateAlertSound(); }catch(e){}
 }
@@ -1717,7 +1740,9 @@ function doLogin(){
 function doLogout(){
   try{ localStorage.removeItem(AUTH_KEY); }catch(e){}
   document.body.classList.remove('role-security');
+  document.body.classList.remove('role-admin');
   const lo=document.getElementById('logout_btn'); if(lo) lo.hidden=true;
+  const ub=document.getElementById('user_badge'); if(ub) ub.hidden=true;
   document.getElementById('login_user').value='';
   document.getElementById('login_pass').value='';
   document.getElementById('login_overlay').hidden=false;
@@ -2018,7 +2043,7 @@ function toast(msg){
 }
 
 // In-page confirm (native confirm() can be blocked in embedded views). Returns a Promise<boolean>.
-function askConfirm(msg,okLabel,danger){
+function askConfirm(msg,okLabel,danger,cancelLabel){
   return new Promise(resolve=>{
     const bg=document.getElementById('modalbg');
     const ok=document.getElementById('modalok');
@@ -2030,10 +2055,12 @@ function askConfirm(msg,okLabel,danger){
     ok.style.display='';
     ok.textContent=okLabel||'Confirm';
     ok.className='btn sm'+(danger?' danger':' ok');
+    cancel.textContent=cancelLabel||'Cancel';
     bg.classList.add('show');
     const done=val=>{
       bg.classList.remove('show');
       ok.onclick=null; cancel.onclick=null; bg.onclick=null;
+      cancel.textContent='Cancel';   // reset for other dialogs
       resolve(val);
     };
     ok.onclick=()=>done(true);
@@ -2462,9 +2489,48 @@ function finishUnload(id){
 // ---- security EXECUTES the physical move ----
 async function moveToYard(id){
   const v=STATE.vehicles.find(x=>x.id===id); if(!v||v.status!=='call_alert')return;
-  if(!await askConfirm('Confirm '+v.veh+' has moved into the '+v.zone+' yard?','Move to Yard'))return;
-  v.status='yard'; v.yardAt=now(); v.alertUntil=0; save();
-  toast(v.veh+' → yard'); render();
+  // Step 1 — Yes/No: did the vehicle actually move to the yard?
+  const moved=await askConfirm('Has '+v.veh+' moved into the '+v.zone+' yard?','Yes — moved',false,'No');
+  if(moved){
+    v.status='yard'; v.yardAt=now(); v.alertUntil=0;
+    v.papers = v.papers==='hold' ? 'ok' : v.papers;   // clear any prior not-moved hold
+    v.holdReason=''; v.notMoved=null;
+    save(); toast(v.veh+' → yard'); render(); return;
+  }
+  // Step 2 — No: why not?
+  const reason=await askChoice('Why has '+v.veh+' not moved to the yard?',
+    ['Driver not available','Vehicle not available']);
+  if(reason==null) return;   // cancelled — leave as-is (still call_alert)
+
+  if(reason==='Driver not available'){
+    // On hold, but KEEPS its queue position (FIFO time untouched). ETA keeps climbing
+    // because the vehicle is still in the system; queue order does not change.
+    v.status='waiting';                 // back in queue at its original FIFO slot
+    v.papers='hold';
+    v.holdReason='On hold — driver not available';
+    v.notMoved={ reason:'driver', at:now() };
+    v.alertUntil=0;
+    // NOTE: queueTime / fifoOverride untouched → position unchanged
+    save(); toast(v.veh+' on hold — driver not available'); render(); return;
+  }
+
+  if(reason==='Vehicle not available'){
+    // Vehicle left without unloading → mark done / gated out with a clear remark.
+    v.status='done'; v.doneAt=now(); v.finishedAt=now(); v.alertUntil=0;
+    v.leftWithoutUnloading=true;
+    v.remarks='Left without unloading — Driver left';
+    save(); toast(v.veh+' marked gated out — driver left'); render(); return;
+  }
+}
+
+// Driver (who was previously unavailable) has now arrived → move the vehicle to yard.
+async function driverArrived(id){
+  const v=STATE.vehicles.find(x=>x.id===id); if(!v) return;
+  if(!await askConfirm('Driver for '+v.veh+' has arrived — move into the '+v.zone+' yard?','Yes — move to yard',false,'No')) return;
+  v.status='yard'; v.yardAt=now(); v.alertUntil=0;
+  v.papers = v.papers==='hold' ? 'ok' : v.papers;   // clear the driver-not-available hold
+  v.holdReason=''; v.notMoved=null;
+  save(); toast(v.veh+' → yard'); render();
 }
 function gateOut(id){
   const v=STATE.vehicles.find(x=>x.id===id); if(!v)return;
@@ -2719,6 +2785,9 @@ function locationFlag(v){
 function rowAction(v){
   if(v.status==='call_alert')
     return `<button class="btn toyard xs" onclick="moveToYard('${v.id}')">Move to Yard</button>`;
+  // Driver-not-available hold: once the driver arrives, Security can move it to yard.
+  if(v.notMoved && v.notMoved.reason==='driver' && v.status!=='done')
+    return `<button class="btn toyard xs" onclick="driverArrived('${v.id}')">Move to Yard</button>`;
   if(v.status==='awaiting')
     return `<button class="btn ok xs" onclick="confirmGateOut('${v.id}')">${v.icm?'Depart':'Gate Out'}</button>`;
   return '<span style="color:var(--dim)">—</span>';
@@ -2787,7 +2856,7 @@ function renderSecurity(){
       return `<div class="vrow${lit?' alerted':''}${agedCls(v)}">
         <span class="c-alert">${light}</span>
         <span class="c-veh mono" title="${esc(v.veh)}">${esc(v.veh)} ${cargoTag(v)}${agedBadge(v)}
-          ${v.driver?`<button class="drv-btn" data-drv="${esc(v.driver)}" title="Show driver number" onclick="toggleDriver(this)">📞</button><span class="drv-num" hidden>${esc(v.driver)}</span>`:'<span class="drv-none" title="No driver number on record for this vehicle">📞 no number</span>'}</span>
+          <button class="drv-btn${v.driver?'':' drv-empty'}" data-drv="${esc(v.driver||'')}" title="${v.driver?'Show driver number':'No number on record'}" onclick="toggleDriver(this)">📞</button><span class="drv-num" hidden>${v.driver?esc(v.driver):'No number on record'}</span></span>
         <span class="c-ven" title="${esc(v.vendor)}">${esc(v.vendor)}${v.icm&&v.dest?' · '+esc(v.dest):''}</span>
         <span class="c-loc"><span class="locpill ${fl.cls}">${fl.label}</span></span>
         <span class="c-act">${rowAction(v)}</span>
@@ -2800,8 +2869,22 @@ function toggleDriver(btn){
   const num=cell?cell.querySelector('.drv-num'):null;
   if(!num) return;
   const show=num.hasAttribute('hidden');
-  if(show){ num.removeAttribute('hidden'); btn.classList.add('on'); btn.setAttribute('title','Hide driver number'); }
-  else { num.setAttribute('hidden',''); btn.classList.remove('on'); btn.setAttribute('title','Show driver number'); }
+  // close any other open popups first
+  document.querySelectorAll('.drv-num:not([hidden])').forEach(n=>{ if(n!==num){ n.setAttribute('hidden',''); const b=n.parentElement&&n.parentElement.querySelector('.drv-btn'); if(b)b.classList.remove('on'); } });
+  if(show){
+    num.removeAttribute('hidden');
+    btn.classList.add('on'); btn.setAttribute('title','Hide driver number');
+    // pin as fixed so NO ancestor overflow can clip it
+    const r=btn.getBoundingClientRect();
+    num.style.position='fixed';
+    num.style.left=Math.max(8,r.left)+'px';
+    num.style.top=(r.bottom+6)+'px';
+    num.style.bottom='auto';
+  } else {
+    num.setAttribute('hidden','');
+    btn.classList.remove('on'); btn.setAttribute('title','Show driver number');
+    num.style.position=''; num.style.left=''; num.style.top=''; num.style.bottom='';
+  }
 }
 async function confirmGateOut(id){
   const v=STATE.vehicles.find(x=>x.id===id); if(!v)return;
@@ -3065,7 +3148,7 @@ function ctaYardRow(v,plan){
       : `<span class="dim" style="color:var(--red);font-size:11.5px">No free ${v.zone} dock for ${esc(v.size)}</span>`;
   }
   return `<div class="vrow cta-row${agedCls(v)}">
-    <span class="c-veh mono" title="${esc(v.veh)}">${esc(v.veh)} ${cargoTag(v)}${agedBadge(v)}</span>
+    <span class="c-veh mono" title="${esc(v.veh)}">${esc(v.veh)} ${cargoTag(v)}${agedBadge(v)}<button class="drv-btn${v.driver?'':' drv-empty'}" data-drv="${esc(v.driver||'')}" title="${v.driver?'Show driver number':'No number on record'}" onclick="toggleDriver(this)">&#128222;</button><span class="drv-num" hidden>${v.driver?esc(v.driver):'No number on record'}</span></span>
     <span class="c-ven" data-size="${esc(v.size||'—')}" title="${esc(v.vendor)}">${esc(v.vendor)}${v.icm&&v.dest?' · '+esc(v.dest):''}</span>
     <span class="c-sz">${esc(v.size)}</span>
     <span class="c-zone2"><span class="zpill ${zcls}">${v.zone}</span></span>
@@ -3121,7 +3204,7 @@ function ctaRow(v,i){
 
   return `<div class="vrow cta-row${ready?' is-ready':''}${agedCls(v)}">
     <span class="c-pos ${i===0?'next':''}">${i+1}</span>
-    <span class="c-veh mono" title="${esc(v.veh)}${v.driver?' · '+esc(v.driver):''}">${esc(v.veh)}${flagInline}${agedBadge(v,true)}</span>
+    <span class="c-veh mono" title="${esc(v.veh)}${v.driver?' · '+esc(v.driver):''}">${esc(v.veh)}${flagInline}${agedBadge(v,true)}<button class="drv-btn${v.driver?'':' drv-empty'}" data-drv="${esc(v.driver||'')}" title="${v.driver?'Show driver number':'No number on record'}" onclick="toggleDriver(this)">&#128222;</button><span class="drv-num" hidden>${v.driver?esc(v.driver):'No number on record'}</span></span>
     <span class="c-ven" data-size="${esc(v.size||'—')}" title="${esc(v.vendor)}">${esc(v.vendor)}${v.icm&&v.dest?' · '+esc(v.dest):''}</span>
     <span class="c-sz">${esc(v.size||'—')}</span>
     <span class="c-status">${statusHTML}</span>
@@ -3657,6 +3740,7 @@ function renderToday(){
   if(!shown.length){box.innerHTML=emptyMsg('🔍','No matches','No vehicle or vendor matches “'+esc(term)+'”.');return;}
 
   const stageIdx=v=>{
+    if(v.leftWithoutUnloading) return 0;   // never docked — left from the queue/gate
     if(['waiting','call_alert','yard'].includes(v.status)) return 0;
     if(v.status==='docked') return 1;
     if(v.status==='awaiting'||v.status==='done'){
@@ -3680,6 +3764,7 @@ function renderToday(){
     return '';
   };
   const stageLabel=v=>{
+    if(v.leftWithoutUnloading) return 'Driver Left';
     if(v.papers==='hold') return 'On Hold';
     if(v.status==='waiting'||v.status==='call_alert') return v.status==='call_alert'?'To Yard':'Waiting';
     if(v.status==='yard') return 'In Yard';
@@ -3761,6 +3846,7 @@ function renderToday(){
       <div class="tltable">${rows}</div>
       ${grnAction}
       ${v.fifoOverride?`<div class="ld-fifo"><span class="ld-fifo-tag">OFT</span> Sent out of FIFO turn${v.fifoOverride.ahead?' (ahead of '+esc(v.fifoOverride.ahead)+')':''} — <em>${esc(v.fifoOverride.reason||'no reason')}</em></div>`:''}
+      ${v.leftWithoutUnloading?`<div class="ld-fifo" style="color:var(--red)"><span class="ld-fifo-tag" style="background:var(--red);color:#fff">LEFT</span> <em>${esc(v.remarks||'Left without unloading — Driver left')}</em></div>`:''}
     </div>`;
   };
 
@@ -3843,7 +3929,7 @@ function exportShiftCSV(){
   const rows=(LOG_ROWS||[]).concat(STATE.archive||[]);
   if(!rows.length){ toast('Nothing to export'); return; }
   const head=['Vehicle','Vendor','Driver','Size','Purpose','Zone','Status','Queue#',
-    'Gate In','Cleared','In Yard','On Dock','Released','Gated Out','Total Waited (min)','FIFO Override','Override Reason'];
+    'Gate In','Cleared','In Yard','On Dock','Released','Gated Out','Total Waited (min)','FIFO Override','Override Reason','Remarks'];
   const cell=s=>{ s=(s==null?'':String(s)); return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; };
   const dt=ts=>ts?new Date(ts).toLocaleString():'';
   const q=waiting().filter(v=>v.papers!=='hold');
@@ -3856,7 +3942,8 @@ function exportShiftCSV(){
       v.status,qp<0?'':qp+1,
       dt(v.gateTime),dt(v.calledAt),dt(v.yardAt),dt(v.placedAt),dt(v.finishedAt),dt(v.doneAt),
       Math.round((end-v.gateTime)/60000),
-      v.fifoOverride?'YES':'', v.fifoOverride?(v.fifoOverride.reason||''):''
+      v.fifoOverride?'YES':'', v.fifoOverride?(v.fifoOverride.reason||''):'',
+      v.remarks||(v.holdReason||'')
     ].map(cell).join(','));
   });
   const csv=lines.join('\r\n');
@@ -4798,6 +4885,8 @@ function grnEligible(v){
   // GRN is the inbound goods-receipt step. ICM Forward is an outbound internal
   // movement — there is nothing to receive, so it never needs GRN.
   if(v.icm || v.purpose==='loading') return false;
+  // Vehicles that left without unloading never need GRN (nothing was received).
+  if(v.leftWithoutUnloading) return false;
   return v.status==='awaiting'||v.status==='done';
 }
 
