@@ -350,6 +350,13 @@
   .ov-danger>div:first-child{flex:1 1 auto;min-width:0}
   .ov-danger-t{font-weight:700;font-size:13.5px;color:var(--ink);margin-bottom:2px}
   .ov-danger-s{font-size:11.5px;color:var(--muted);line-height:1.45}
+  /* Danger Zone — clearly-marked red container for destructive admin actions */
+  .danger-title h3{color:var(--red)}
+  .danger-zone{border:1px solid rgba(255,93,108,.45);border-radius:12px;
+    background:rgba(255,93,108,.05);padding:6px 18px;margin-top:4px}
+  .danger-zone .ov-danger{margin-top:14px;border:none;background:transparent;padding:12px 0}
+  .danger-zone .ov-danger:first-child{margin-top:6px}
+  .danger-zone .ov-danger+.ov-danger{border-top:1px solid rgba(255,93,108,.2)}
   /* >24h on site — escalating flag across all views */
   .aged{box-shadow:inset 0 0 0 1.5px rgba(255,176,32,.8)!important;border-radius:8px}
   .aged-2{box-shadow:inset 0 0 0 1.5px rgba(255,127,80,.85)!important}
@@ -1280,7 +1287,7 @@
   // shared "room" — all devices using the same room code see the same data.
   const FIREBASE_ROOM = "gnsc-main";
   // Build tag — bump this every deploy so you can confirm a device loaded the latest build.
-  window.BUILD_VERSION = "v20";
+  window.BUILD_VERSION = "v24";
   function firebaseConfigured(){
     return FIREBASE_CONFIG.databaseURL && FIREBASE_CONFIG.databaseURL.indexOf("PASTE_")===-1;
   }
@@ -1424,21 +1431,6 @@
       <div class="sectiontitle"><h3>ICM — Inter-Commissary Movements</h3><div class="ln"></div>
         <button class="btn ghost sm" onclick="addICM()">+ Add ICM</button></div>
       <div class="panel"><div class="body" style="padding:0" id="ov_icmlist"></div></div>
-
-      <div class="ov-danger">
-        <div>
-          <div class="ov-danger-t">Clear operational data</div>
-          <div class="ov-danger-s">Removes all vehicles, ICMs, archive and learning history. Masters (vehicle types, docks, calc times) are kept.</div>
-        </div>
-        <button class="btn danger sm" onclick="resetData()">Clear data</button>
-      </div>
-      <div class="ov-danger">
-        <div>
-          <div class="ov-danger-t">Log out all devices</div>
-          <div class="ov-danger-s">Signs out every phone and PC using DockFlow. Use after an update so all devices reload and sign in fresh.</div>
-        </div>
-        <button class="btn danger sm" onclick="forceLogoutAllDevices()">Log out all</button>
-      </div>
     </div>
 
     <!-- CALL TO ACTION -->
@@ -1611,6 +1603,24 @@
         <div class="body">
           <div id="vt_readout" class="trend-readout"></div>
           <div id="vt_chart" class="trend-chart"></div>
+        </div>
+      </div>
+
+      <div class="sectiontitle danger-title"><h3>⚠ Danger Zone</h3><div class="ln"></div></div>
+      <div class="danger-zone">
+        <div class="ov-danger">
+          <div>
+            <div class="ov-danger-t">Clear operational data</div>
+            <div class="ov-danger-s">Removes all vehicles, ICMs, archive and learning history. Masters (vehicle types, docks, calc times) are kept.</div>
+          </div>
+          <button class="btn danger sm" onclick="resetData()">Clear data</button>
+        </div>
+        <div class="ov-danger">
+          <div>
+            <div class="ov-danger-t">Log out all devices</div>
+            <div class="ov-danger-s">Signs out every phone and PC using DockFlow. Use after an update so all devices reload and sign in fresh.</div>
+          </div>
+          <button class="btn danger sm" onclick="forceLogoutAllDevices()">Log out all</button>
         </div>
       </div>
     </div>
@@ -1884,6 +1894,14 @@ function normalizeState(){
   if(!Array.isArray(STATE.alerts))   STATE.alerts=[];
   if(typeof STATE.seq!=='number')    STATE.seq=1;
   if(typeof STATE.icmSeq!=='number') STATE.icmSeq=1;
+  // Migration backfill: any record without a per-record timestamp gets a baseline equal
+  // to the current clear boundary (or 1 if no clear). This makes grandfathered records
+  // SURVIVE the current clearedAt filter, while any genuine future edit (stamped via the
+  // monotonic now() in stampChanges) is strictly greater and still wins the merge. Closes
+  // the unstamped-record gap that let stale peers briefly revert changes.
+  const baseTs=STATE.clearedAt||1;
+  STATE.vehicles.forEach(v=>{ if(v && v.updatedAt==null) v.updatedAt=baseTs; });
+  STATE.icms.forEach(v=>{ if(v && v.updatedAt==null) v.updatedAt=baseTs; });
 }
 
 // Live listener: when ANOTHER device writes, update our STATE + re-render.
@@ -2383,25 +2401,19 @@ function avgBy(field,val){
    Tiers (each used only with >=10 clean samples):
      1. vendor+size   2. size-only   3. vendor-only   4. calc standard          */
 function estimateUnload(v){
+  // Only the precise Vendor+Size learned average is trusted. If that exact combination
+  // doesn't have >= MIN_SAMPLES clean samples, fall straight to the calc master standard.
+  // (Size-only and Vendor-only fallbacks were removed — they mix non-comparable loads.)
   const exact=learnStat(h=>h.vendor===v.vendor && h.size===v.size);
   if(exact.n>=MIN_SAMPLES) return exact.mean;
-  const bySize=learnStat(h=>h.size===v.size);
-  if(bySize.n>=MIN_SAMPLES) return bySize.mean;
-  const byVendor=learnStat(h=>h.vendor===v.vendor);
-  if(byVendor.n>=MIN_SAMPLES) return byVendor.mean;
-  // No tier has >= MIN_SAMPLES clean samples → learned average is NOT trusted yet.
-  // Use the master/calc standard until enough real data accumulates (>=10 samples).
   return calcMins(v.size);
 }
 // which tier is actually driving a vehicle's estimate (for display/confidence)
 function estimateTier(v){
   const exact=learnStat(h=>h.vendor===v.vendor && h.size===v.size);
   if(exact.n>=MIN_SAMPLES) return {tier:'vendor+size', n:exact.n, trusted:true};
-  const bySize=learnStat(h=>h.size===v.size);
-  if(bySize.n>=MIN_SAMPLES) return {tier:'size', n:bySize.n, trusted:true};
-  const byVendor=learnStat(h=>h.vendor===v.vendor);
-  if(byVendor.n>=MIN_SAMPLES) return {tier:'vendor', n:byVendor.n, trusted:true};
-  return {tier:'calc std', n:Math.max(exact.n,bySize.n,byVendor.n), trusted:false};
+  // Below threshold for the exact Vendor+Size combo → calc master standard is used.
+  return {tier:'calc std', n:exact.n, trusted:false};
 }
 
 /* ---------- queue / FIFO logic ----------
