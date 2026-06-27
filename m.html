@@ -595,27 +595,47 @@
     /* ---------- stat cards ---------- */
     /* 3 across so 5-6 stat cards fit in TWO rows, not three — keeps the top deck tight */
     .stats{grid-template-columns:repeat(3,1fr);gap:6px}
-    .stat{padding:8px 8px}
-    .stat .k{font-size:8px;letter-spacing:.4px;line-height:1.15}
-    .stat .n{font-size:17px;margin-top:2px}
-    .stat .u{font-size:8px;line-height:1.15}
+    .stat{padding:7px 8px}
+    .stat .k{font-size:8px;letter-spacing:.4px;line-height:1.1}
+    .stat .n{font-size:15.5px;margin-top:1px;line-height:1.1}
+    .stat .u{font-size:8px;line-height:1.1}
     .stats[style*="repeat(2"]{grid-template-columns:repeat(3,1fr)!important}
+    /* All Vehicles has exactly 4 stat cards → put them on ONE line (4-up) */
+    #today_stats{grid-template-columns:repeat(4,1fr)!important;gap:5px}
+    #today_stats .stat{padding:6px 6px}
+    #today_stats .stat .k{font-size:7px;letter-spacing:.2px}
+    #today_stats .stat .n{font-size:14px}
+    #today_stats .stat .u{font-size:7px}
 
     /* ---------- panels / sections ---------- */
     .panel .head{padding:10px 11px}
-    .panel .head h2{font-size:11px}
-    .panel .body{padding:11px}
-    .sectiontitle{margin:15px 2px 8px}
-    .sectiontitle h3{font-size:12.5px}
+    .panel .head h2{font-size:10.5px}
+    .panel .body{padding:10px}
+    .sectiontitle{margin:13px 2px 7px}
+    .sectiontitle h3{font-size:11px;letter-spacing:.4px}
+    .sectiontitle h3::before{height:11px}
+    /* section "eyebrow" counts (e.g. "1 WAITING", "0 IN YARD") — smaller, less shouty */
+    .eyebrow{font-size:8.5px!important;letter-spacing:1px!important}
 
-    /* ---------- sub-tabs ---------- */
-    .subtabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+    /* ---------- inputs (global dense pass) ---------- */
+    .logsearch{font-size:11px!important;padding:7px 11px!important}
+    .logbar{gap:8px;margin-bottom:10px}
+    .qbox-input{font-size:11px!important;padding:7px 11px!important}
+    .qbox-row{gap:8px!important}
+    .qchips{gap:6px!important}
+    .qchips .chip,.qchips button{font-size:10px!important;padding:4px 9px!important}
+    .qbox-panel .body{padding:9px!important}
+    /* sub-tabs: ONE horizontally-scrollable row (swipe to reach Masters/Summary/Intelligence) */
+    .subtabs{flex-wrap:nowrap!important;overflow-x:auto;-webkit-overflow-scrolling:touch;
+      scrollbar-width:none;margin-bottom:12px}
     .subtabs::-webkit-scrollbar{display:none}
-    .subtabs button{flex:none;padding:7px 11px;font-size:12.5px;white-space:nowrap}
+    .subtabs button{flex:0 0 auto!important;padding:6px 10px;font-size:12px;white-space:nowrap}
 
-    /* ---------- buttons ---------- */
-    button.btn{padding:9px 13px;font-size:12.5px}
-    button.btn.sm{padding:7px 10px;font-size:11px}
+    /* ---------- buttons (global dense pass) ---------- */
+    button.btn{padding:7px 11px;font-size:11px;border-radius:8px}
+    button.btn.sm{padding:5px 9px;font-size:10px;border-radius:7px}
+    /* the primary blue action (Send to Yard, Ask, etc.) — compact but still tappable */
+    button.btn.blue,button.btn.ok,button.btn.cta-send{padding:7px 12px!important;font-size:11px!important;min-height:32px!important}
 
     /* ====================================================================
        SHARED FOUNDATION for every list row.
@@ -671,12 +691,12 @@
     #bd_queue thead,#bd_hold thead{display:none}
     #bd_queue tbody,#bd_hold tbody{display:block}
     #bd_queue tr,#bd_hold tr{
-      display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:1px 12px;
+      display:grid;grid-template-columns:auto 1fr auto;grid-auto-rows:min-content;align-items:center;gap:2px 12px;
       padding:var(--m-pad) 8px var(--m-pad) var(--m-pad);
       border-bottom:1px solid var(--line-soft);background:transparent;
     }
     #bd_queue tr::before,#bd_hold tr::before{
-      content:"";grid-column:1;grid-row:1 / span 2;align-self:center;
+      content:"";grid-column:1;grid-row:1;align-self:center;
       width:9px;height:9px;border-radius:50%;background:var(--blue-sky);box-shadow:0 0 8px var(--blue-sky);
     }
     #bd_hold tr::before{background:var(--red);box-shadow:0 0 8px var(--red)}
@@ -707,29 +727,44 @@
                   └ line tracker (gate→dock→released→GRN), full width
        ==================================================================== */
     #todaylist .vrow,#grnpending_list .vrow{min-width:0!important}
+    /* lights legend — compact, learnable key for the timeline colours */
+    .light-legend{display:flex;flex-wrap:wrap;gap:5px 12px;align-items:center;
+      padding:7px 10px;margin-bottom:8px;border:1px solid var(--line-soft);border-radius:8px;
+      background:var(--panel2)}
+    .light-legend .lg{display:inline-flex;align-items:center;gap:5px;font:600 9px var(--mono);
+      letter-spacing:.3px;text-transform:uppercase;color:var(--muted)}
+    .light-legend .lg-dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto}
+    .light-legend .lg-wait{background:#3da5ff;box-shadow:0 0 5px rgba(61,165,255,.6)}
+    .light-legend .lg-dock{background:var(--amber);box-shadow:0 0 5px rgba(255,176,32,.6)}
+    .light-legend .lg-rel{background:var(--green);box-shadow:0 0 5px rgba(57,217,138,.6)}
+    .light-legend .lg-grn{background:#8b5cf6;box-shadow:0 0 5px rgba(167,114,255,.6)}
+    .light-legend .lg-held{background:#e0455e;box-shadow:0 0 5px rgba(224,69,94,.6)}
     .logrow{
-      display:grid!important;grid-template-columns:1fr auto;align-items:center;gap:1px 12px;
+      display:grid!important;grid-template-columns:1fr auto;align-items:center;gap:0 12px;
       height:auto!important;min-height:0!important;
-      padding:var(--m-pad) 8px var(--m-pad) var(--m-pad)!important;
+      padding:7px 8px 7px 10px!important;
       border-bottom:1px solid var(--line-soft)!important;background:transparent!important;
       box-shadow:none!important;margin:0!important;cursor:pointer;
     }
     .logrow.expanded{background:rgba(47,127,255,.05)!important}
     /* status dot removed — the line tracker already shows status. */
-    .logrow .c-ven{grid-column:1;grid-row:1;font-size:12.5px!important;font-weight:700;color:var(--ink)}
+    .logrow .c-ven{grid-column:1;grid-row:1;font-size:12.5px!important;font-weight:700;color:var(--ink);line-height:1.25}
     .logrow .c-stage{grid-column:2;grid-row:1;justify-self:end;font-size:9.5px!important;font-weight:700;
       text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
     .logrow .c-veh{grid-column:1;grid-row:2;font-size:11px!important;font-weight:600;color:var(--muted);
-      padding:0!important;border:none!important}
+      padding:0!important;border:none!important;line-height:1.2}
     .logrow .veh-toggle{flex:0 0 auto;color:var(--dim);font-size:9.5px}
-    .logrow .c-sz2{grid-column:2;grid-row:2;justify-self:end;font:600 9.5px var(--mono);color:var(--dim)}
+    .logrow .c-sz2{grid-column:2;grid-row:1;justify-self:end;font:600 9.5px var(--mono);color:var(--dim)}
+    /* compact timeline: sits close under the header, smaller nodes, thin spacing */
     .logrow .c-track{display:flex!important;grid-column:1 / -1;grid-row:3;width:100%;flex:0 0 auto!important;
-      margin-top:8px;padding-top:8px;border-top:1px solid var(--line-soft);overflow:visible}
-    .logrow .c-track .track{width:100%;padding:6px 4px 2px}
-    /* mobile tracker: bigger, clearer nodes so all 4 stages incl. GRN read well */
-    .logrow .c-track .node-dot{width:16px;height:16px}
-    .logrow .c-track .node-lbl{font-size:9.5px}
-    .logrow .c-track .track-line{top:13px;left:14px;right:14px}
+      margin-top:5px;padding-top:0;border-top:none;overflow:visible}
+    .logrow .c-track .track{width:100%;padding:2px 4px 0}
+    .logrow .c-track .node-dot{width:13px;height:13px}
+    /* lights-only: drop the per-node text labels — the coloured bulbs carry the meaning */
+    .logrow .c-track .node-lbl{display:none!important}
+    .logrow .c-track .track-line{top:7px;left:12px;right:12px}
+    /* lights-only: drop the right-side stage word too (the timeline shows status) */
+    .logrow .c-stage{display:none!important}
     .logrow .c-sl,.logrow .c-q,.logrow .c-t,.logrow .c-wt,.logrow .c-grn{display:none!important}
     .logrow.row-sla{background:rgba(255,176,32,.06)!important}
     .logdetail-wrap{padding:0 16px 12px 16px!important;background:rgba(47,127,255,.04)}
@@ -778,7 +813,7 @@
     .cta-row{
       display:grid!important;
       grid-template-columns:1fr auto;            /* identity | action */
-      align-items:center;gap:5px 10px;
+      align-items:center;gap:5px 16px;
       height:auto!important;min-height:0!important;
       padding:10px!important;
       border:1px solid var(--line);border-left:3px solid var(--blue-azure);
@@ -797,17 +832,16 @@
     .cta-row .c-veh{grid-column:1;grid-row:1;
       font:800 var(--m-anchor) var(--mono)!important;color:var(--ink);
       display:flex;align-items:center;gap:7px;flex-wrap:wrap}
-    .cta-row .c-pos{order:-1;align-self:center;width:auto!important;
-      background:var(--panel3);color:var(--muted);border:1px solid var(--line);border-radius:6px;
-      padding:1px 7px;font:700 9.5px var(--mono);letter-spacing:.5px}
-    .cta-row .c-pos::before{content:"#"}
-    .cta-row .c-pos.next{color:var(--amber);border-color:rgba(255,176,32,.5)}
+    .cta-row .c-pos{display:none!important}   /* position now shown inline inside the plate */
+    .cta-row .c-veh .pos-inline{font:700 9px var(--mono);letter-spacing:.3px;color:var(--muted);
+      background:var(--panel3);border:1px solid var(--line);border-radius:5px;padding:0 5px;margin-right:5px;flex:0 0 auto}
+    .cta-row .c-veh .pos-inline.next{color:var(--amber);border-color:rgba(255,176,32,.5)}
     /* the action sits on the right edge, spanning the card's rows */
-    .cta-row .c-send{grid-column:2;grid-row:1 / span 2;align-self:center;justify-self:end;
+    .cta-row .c-send{grid-column:2;grid-row:4;align-self:center;justify-self:end;
       display:flex;justify-content:flex-end}
     .cta-row .c-send .cta-send,.cta-row .c-send button{
-      min-height:var(--m-tap);font-size:12.5px!important;font-weight:700;padding:10px 14px!important;
-      border-radius:9px;white-space:nowrap}
+      min-height:28px!important;font-size:10.5px!important;font-weight:700;padding:5px 10px!important;
+      border-radius:7px;white-space:nowrap}
 
     /* row 2: vendor · size  (quiet subtitle, no labels) */
     .cta-row .c-ven{grid-column:1;grid-row:2;
@@ -821,30 +855,54 @@
     .cta-row .c-status{grid-column:1 / -1;grid-row:3;font-size:12.5px}
     .cta-row .c-status:empty{display:none}
 
-    /* row 4: zone + papers as COMPACT icon toggles, side by side on one line */
-    .cta-row .c-zone2,.cta-row .c-pap{display:flex;align-items:center;gap:6px}
-    .cta-row .c-zone2{grid-column:1;grid-row:4}
-    .cta-row .c-pap{grid-column:2;grid-row:4;justify-self:end}
-    .cta-row .c-zone2::before,.cta-row .c-pap::before{
-      font:600 8px var(--mono);letter-spacing:.3px;text-transform:uppercase;color:var(--dim);flex:0 0 auto}
-    .cta-row .c-zone2::before{content:"Zone"}
-    .cta-row .c-pap::before{content:"Papers"}
+    /* waiting banner hidden on mobile — the dim/glowing icons show what's pending */
+    .cta-row .c-status{display:none!important}
+    /* zone + papers: icon-only toggles, NO text labels/headers (icons carry meaning) */
+    .cta-row .cta-controls{grid-column:1;grid-row:4;display:flex;align-items:center;
+      flex-wrap:wrap;gap:6px 12px;justify-self:start;min-width:0;overflow:visible;
+      padding:3px 8px 3px 0;margin-left:2px}
+    /* segmini icon-box: keep it fully inside the card (don't sit under the left stripe) */
+    .cta-row .segicons{flex:0 0 auto;max-width:100%}
+    .cta-row .c-zone2,.cta-row .c-pap{display:inline-flex;align-items:center;gap:6px;overflow:visible}
+    .cta-row .segmini.segicons{overflow:visible;padding:1px}
+    /* no "Zone"/"Papers" labels anymore */
+    .cta-row .c-zone2::before,.cta-row .c-pap::before{content:none!important}
+    /* icon toggle buttons — square-ish, just the symbol */
+    .cta-row .segicons .segb,.cta-row .c-pap .papicon{
+      min-width:34px;min-height:28px!important;padding:3px 8px!important;font-size:14px!important;
+      display:inline-flex;align-items:center;justify-content:center;line-height:1;border-radius:7px;
+      transition:filter .15s, opacity .15s, background .15s}
+    .cta-row .segicons .segb::before{content:none!important}
+    /* DIM when not selected, NEON GLOW when selected */
+    .cta-row .segicons .segb,.cta-row .c-pap .segicons .segb{opacity:.38;filter:grayscale(.3)}
+    .cta-row .segicons .segb.on{opacity:1;filter:none;
+      box-shadow:0 0 0 1px rgba(61,165,255,.5), 0 0 10px 1px rgba(61,165,255,.55);
+      background:rgba(61,165,255,.12)}
+    /* zone-specific glow colours */
+    .cta-row .segicons .segb.on.amb{box-shadow:0 0 0 1px rgba(255,176,32,.55), 0 0 11px 1px rgba(255,176,32,.6);background:rgba(255,176,32,.13)}
+    .cta-row .segicons .segb.on.chl{box-shadow:0 0 0 1px rgba(61,165,255,.6), 0 0 11px 1px rgba(61,165,255,.6);background:rgba(61,165,255,.14)}
+    /* papers: OK green glow, Hold amber glow */
+    .cta-row .c-pap .papicon.okp.on,.cta-row .c-pap .segb.okp.on{opacity:1;filter:none;
+      box-shadow:0 0 0 1px rgba(57,217,138,.6), 0 0 11px 1px rgba(57,217,138,.6);background:rgba(57,217,138,.14)}
+    .cta-row .c-pap .papicon.holdp.on{opacity:1;filter:none;
+      box-shadow:0 0 0 1px rgba(255,176,32,.6), 0 0 11px 1px rgba(255,176,32,.6);background:rgba(255,176,32,.14)}
+    /* the standalone papers-OK single toggle (already-ok state) always lit green */
+    .cta-row .c-pap>.papicon.okp{opacity:1;filter:none;
+      box-shadow:0 0 0 1px rgba(57,217,138,.55), 0 0 10px 1px rgba(57,217,138,.5);background:rgba(57,217,138,.13)}
+    /* yard card uses a STANDALONE c-zone2 (zone pill, no papers wrapper) — place it on row 4 */
+    .cta-row > .c-zone2{grid-column:1;grid-row:4;justify-self:start}
+    .cta-row > .c-zone2::before{content:""}   /* yard zone pill shows the zone itself, no label */
     /* zone toggles with ☀️/❄️ symbols — compact */
-    .cta-row .segmini{display:inline-flex;gap:4px;flex:0 0 auto}
-    .cta-row .segmini .segb{flex:0 0 auto;min-height:30px;padding:4px 9px;font-size:11px;
-      display:inline-flex;align-items:center;justify-content:center;gap:4px;border-radius:7px}
-    .cta-row .segmini .segb[data-z="ambient"]::before{content:"\2600\FE0F";font-size:12.5px}
-    .cta-row .segmini .segb[data-z="chiller"]::before{content:"\2744\FE0F";font-size:12.5px}
-    /* papers ✓ / ⏸ symbols only — compact icon buttons */
-    .cta-row .c-pap .segb{font-size:0!important;gap:0;min-width:34px;min-height:30px;padding:4px 8px;border-radius:7px}
-    .cta-row .c-pap .segb::before{font-size:12.5px;line-height:1}
-    .cta-row .c-pap .segb[data-pap="ok"]::before{content:"\2713"}
-    .cta-row .c-pap .segb[data-pap="hold"]::before{content:"\23F8"}
+    .cta-row .segmini{display:inline-flex!important;gap:5px;flex:0 0 auto!important;width:auto!important}
+    .cta-row .segmini .segb{flex:0 0 auto!important;width:auto!important;min-height:26px!important;
+      padding:3px 9px!important;font-size:10.5px!important;line-height:1;
+      display:inline-flex;align-items:center;justify-content:center;gap:4px}
+    /* the single papers OK button (when already ok) — compact pill, not full width */
+    .cta-row .c-pap .segb{flex:0 0 auto!important;width:auto!important;min-height:26px!important;
+      padding:3px 9px!important;font-size:10.5px!important;line-height:1}
     .cta-row .c-pap .papna{font-size:9.5px;color:var(--dim)}
-    /* zone pill (yard card) → ☀️/❄️ symbol, no "Zone" label */
-    .cta-row .c-zone2 .zpill{font-size:0;padding:3px 8px;gap:0}
-    .cta-row .c-zone2 .zpill::before{font-size:12.5px;line-height:1}
-    .cta-row .c-zone2 .zpill.zamb::before{content:"\2600\FE0F"}
+    /* zone pill (locked / yard) → small */
+    .cta-row .c-zone2 .zpill{font-size:11px;padding:3px 8px}
     .cta-row .c-zone2 .zpill.zchl::before{content:"\2744\FE0F"}
     .cta-row .c-zone2:has(.zpill)::before{display:none}
     .cta-row .c-zone2:has(.zpill){gap:0;grid-row:4}
@@ -877,7 +935,7 @@
     .cta-row .c-docks:has(.yard-enroute)::before{display:none}   /* no "assign" label while moving */
     .cta-row .c-veh .drv-btn{flex:0 0 auto}
     /* hold card: reason is the blocker line */
-    .cta-row .c-reason{grid-column:1 / -1;grid-row:3;font-size:12.5px;color:var(--amber)}
+    .cta-row .c-reason{grid-column:1 / -1;grid-row:3;font-size:11px;color:var(--amber)}
 
     /* CTA dock cards (the Docks sub-tab) */
     .dockgrid{grid-template-columns:1fr 1fr!important;gap:12px}
@@ -890,9 +948,14 @@
     input,select,textarea{font-size:17px!important;padding:13px 13px}   /* 16px stops iOS zoom */
     .field label{font-size:12.5px}
     .row2{grid-template-columns:1fr;gap:0}
-    .seg-btn{min-height:44px;font-size:12.5px}
+    .seg{padding:2px;gap:3px;width:max-content;max-width:100%}
+    .seg-btn{min-height:27px;font-size:10.5px;padding:4px 14px;flex:0 0 auto}
     #f_purpose_seg{display:flex;gap:8px}
     #f_purpose_seg .seg-btn{flex:1 1 auto}
+    /* Queue/Docks toggle — tight pill pair, only as wide as the two words */
+    .ctatabs{width:max-content!important;max-width:100%;padding:2px!important;gap:2px!important;
+      border-radius:9px!important;margin-bottom:12px!important}
+    .ctatab{font-size:11px!important;padding:5px 14px!important;flex:0 0 auto!important;border-radius:7px!important}
     #f_submit,.gate-submit{width:100%;min-height:50px;font-size:17px}
     #f_time{width:100%;max-width:100%;box-sizing:border-box;text-align:left;-webkit-appearance:none;appearance:none;font-size:17px!important}
     #f_time::-webkit-date-and-time-value{text-align:left;margin:0}
@@ -1316,7 +1379,7 @@
   // shared "room" — all devices using the same room code see the same data.
   const FIREBASE_ROOM = "gnsc-main";
   // Build tag — bump this every deploy so you can confirm a device loaded the latest build.
-  window.BUILD_VERSION = "v25";
+  window.BUILD_VERSION = "v36";
   function firebaseConfigured(){
     return FIREBASE_CONFIG.databaseURL && FIREBASE_CONFIG.databaseURL.indexOf("PASTE_")===-1;
   }
@@ -1530,6 +1593,13 @@
       <div class="logbar">
         <input id="logsearch" class="logsearch" type="text" placeholder="Search vehicle or vendor…" autocomplete="off">
         <button class="btn ghost sm" id="logexport">⬇ Export CSV</button>
+      </div>
+      <div class="light-legend" id="light_legend">
+        <span class="lg"><i class="lg-dot lg-wait"></i>Waiting</span>
+        <span class="lg"><i class="lg-dot lg-dock"></i>On dock</span>
+        <span class="lg"><i class="lg-dot lg-rel"></i>Loaded</span>
+        <span class="lg"><i class="lg-dot lg-grn"></i>GRN</span>
+        <span class="lg"><i class="lg-dot lg-held"></i>On hold</span>
       </div>
       <div class="panel"><div class="body" style="padding:0" id="todaylist"></div></div>
 
@@ -3376,11 +3446,11 @@ function ctaRow(v,i){
 
   let zoneHTML;
   if(v.zoneLocked){
-    zoneHTML=`<span class="zpill zchl" title="Auto-assigned (veggies / ICM)">Chiller &#128274;</span>`;
+    zoneHTML=`<span class="zpill zchl" title="Auto-assigned (veggies / ICM)">&#10052;&#65039; &#128274;</span>`;
   }else{
-    zoneHTML=`<span class="segmini">
-        <button class="segb${v.zone==='ambient'?' on amb':''}" data-cta="zone" data-id="${v.id}" data-z="ambient">Amb</button>
-        <button class="segb${v.zone==='chiller'?' on chl':''}" data-cta="zone" data-id="${v.id}" data-z="chiller">Chl</button>
+    zoneHTML=`<span class="segmini segicons">
+        <button class="segb${v.zone==='ambient'?' on amb':''}" data-cta="zone" data-id="${v.id}" data-z="ambient" title="Ambient" aria-label="Ambient">&#9728;&#65039;</button>
+        <button class="segb${v.zone==='chiller'?' on chl':''}" data-cta="zone" data-id="${v.id}" data-z="chiller" title="Chiller" aria-label="Chiller">&#10052;&#65039;</button>
       </span>`;
   }
 
@@ -3388,11 +3458,11 @@ function ctaRow(v,i){
   if(v.icm||v.papers==='na'){
     pap=`<span class="papna" title="ICM Forward — internal movement, no inbound papers">N/A</span>`;
   }else if(v.papers==='ok'){
-    pap=`<button class="segb on okp" data-pap="ok" data-cta="paperToggle" data-id="${v.id}" title="Papers OK — tap to put on hold">&#10003; OK</button>`;
+    pap=`<button class="segb on okp papicon" data-pap="ok" data-cta="paperToggle" data-id="${v.id}" title="Papers OK — tap to put on hold" aria-label="Papers OK">&#10003;</button>`;
   }else{
-    pap=`<span class="segmini">
-        <button class="segb okp" data-pap="ok" data-cta="paperOk" data-id="${v.id}" title="Papers OK">&#10003; OK</button>
-        <button class="segb holdp" data-pap="hold" data-cta="paperHold" data-id="${v.id}" title="Put papers on hold">&#9208; Hold</button>
+    pap=`<span class="segmini segicons">
+        <button class="segb okp papicon" data-pap="ok" data-cta="paperOk" data-id="${v.id}" title="Papers OK" aria-label="Papers OK">&#10003;</button>
+        <button class="segb holdp papicon" data-pap="hold" data-cta="paperHold" data-id="${v.id}" title="Put papers on hold" aria-label="Hold papers">&#9208;</button>
       </span>`;
   }
 
@@ -3413,12 +3483,11 @@ function ctaRow(v,i){
 
   return `<div class="vrow cta-row${ready?' is-ready':''}${agedCls(v)}">
     <span class="c-pos ${i===0?'next':''}">${i+1}</span>
-    <span class="c-veh mono" title="${esc(v.veh)}${v.driver?' · '+esc(v.driver):''}">${esc(v.veh)}${flagInline}${agedBadge(v,true)}<button class="drv-btn${v.driver?'':' drv-empty'}" data-drv="${esc(v.driver||'')}" title="${v.driver?'Show driver number':'No number on record'}" onclick="toggleDriver(this)">&#128222;</button><span class="drv-num" hidden>${v.driver?esc(v.driver):'No number on record'}</span></span>
+    <span class="c-veh mono" title="${esc(v.veh)}${v.driver?' · '+esc(v.driver):''}"><span class="pos-inline${i===0?' next':''}">#${i+1}</span> ${esc(v.veh)}${flagInline}${agedBadge(v,true)}<button class="drv-btn${v.driver?'':' drv-empty'}" data-drv="${esc(v.driver||'')}" title="${v.driver?'Show driver number':'No number on record'}" onclick="toggleDriver(this)">&#128222;</button><span class="drv-num" hidden>${v.driver?esc(v.driver):'No number on record'}</span></span>
     <span class="c-ven" data-size="${esc(v.size||'—')}" title="${esc(v.vendor)}">${esc(v.vendor)}${v.icm&&v.dest?' · '+esc(v.dest):''}</span>
     <span class="c-sz">${esc(v.size||'—')}</span>
     <span class="c-status">${statusHTML}</span>
-    <span class="c-zone2">${zoneHTML}</span>
-    <span class="c-pap">${pap}</span>
+    <span class="cta-controls"><span class="c-zone2">${zoneHTML}</span><span class="c-pap">${pap}</span></span>
     <span class="c-send">${send}</span>
   </div>`;
 }
