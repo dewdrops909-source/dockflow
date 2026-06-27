@@ -1280,7 +1280,7 @@
   // shared "room" — all devices using the same room code see the same data.
   const FIREBASE_ROOM = "gnsc-main";
   // Build tag — bump this every deploy so you can confirm a device loaded the latest build.
-  window.BUILD_VERSION = "v19";
+  window.BUILD_VERSION = "v20";
   function firebaseConfigured(){
     return FIREBASE_CONFIG.databaseURL && FIREBASE_CONFIG.databaseURL.indexOf("PASTE_")===-1;
   }
@@ -1982,11 +1982,14 @@ function mergeStates(local, incoming){
   // sequence counters: take the max so ids never collide
   merged.seq    = Math.max(local.seq||1, incoming.seq||1);
   merged.icmSeq = Math.max(local.icmSeq||1, incoming.icmSeq||1);
-  // clear/rollover awareness: newest clear wins, and clears everything older
+  // clear/rollover awareness: newest clear wins. Drop a record ONLY if it was explicitly
+  // stamped with a time older than the clear (a genuine pre-clear ghost). Records with NO
+  // updatedAt are grandfathered in (they predate per-record stamping and must not vanish).
   merged.clearedAt = Math.max(local.clearedAt||0, incoming.clearedAt||0);
   if(merged.clearedAt){
-    merged.vehicles = merged.vehicles.filter(v=>(v.updatedAt||0) >= merged.clearedAt);
-    merged.icms     = merged.icms.filter(v=>(v.updatedAt||0) >= merged.clearedAt);
+    const stale=v=>v && v.updatedAt!=null && v.updatedAt < merged.clearedAt;
+    merged.vehicles = merged.vehicles.filter(v=>!stale(v));
+    merged.icms     = merged.icms.filter(v=>!stale(v));
   }
   merged.lastRollover = incoming.lastRollover || local.lastRollover;
   merged.forceLogoutAt = Math.max(local.forceLogoutAt||0, incoming.forceLogoutAt||0);
