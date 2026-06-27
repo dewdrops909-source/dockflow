@@ -1316,7 +1316,7 @@
   // shared "room" — all devices using the same room code see the same data.
   const FIREBASE_ROOM = "gnsc-main";
   // Build tag — bump this every deploy so you can confirm a device loaded the latest build.
-  window.BUILD_VERSION = "v24";
+  window.BUILD_VERSION = "v25";
   function firebaseConfigured(){
     return FIREBASE_CONFIG.databaseURL && FIREBASE_CONFIG.databaseURL.indexOf("PASTE_")===-1;
   }
@@ -1956,9 +1956,9 @@ function attachLiveSync(){
       render(); renderSyncBadge();
       FB_APPLYING=false;
       checkRemoteLogout();
-      // if the merge produced something different from what the peer sent, push it back
-      // so everyone converges on the union (debounced via the normal save guard).
-      try{ if(sigOf(JSON.stringify(next))!==lastSig) queueMicrotask(()=>{ try{ save(); }catch(_){} }); }catch(_){}
+      // NOTE: no automatic re-push here. Each device broadcasts its OWN changes via its
+      // own save(); an auto re-push after every merge caused an infinite ping-pong between
+      // devices (constant re-render that reverted in-progress actions like move-to-yard).
     }catch(e){ console.error('sync apply failed',e); FB_APPLYING=false; }
   });
 }
