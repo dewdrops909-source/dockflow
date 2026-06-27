@@ -550,50 +550,58 @@
   /* MOBILE-ONLY FILE: this block applies at ALL widths (was max-width:760px).
      There is no desktop layout in this file to fight — mobile is the only view. */
   @media(max-width:99999px){
-    /* ---- mobile tokens ---- */
+    /* ---- mobile tokens (tightened global pass — denser, less zoomed) ---- */
     :root{
-      --m-pad:13px; --m-radius:11px;
-      --m-anchor:15px;   /* plate */
-      --m-sub:12px;      /* vendor subtitle */
-      --m-out:12.5px;    /* the critical output on the right */
-      --m-label:9.5px;   /* mono micro-label */
-      --m-tap:42px;      /* min tap target */
+      --m-pad:10px; --m-radius:10px;
+      --m-anchor:13.5px; /* plate */
+      --m-sub:11px;      /* vendor subtitle */
+      --m-out:11.5px;    /* the critical output on the right */
+      --m-label:9px;     /* mono micro-label */
+      --m-tap:38px;      /* min tap target */
     }
 
     /* ---------- shell ---------- */
-    main{max-width:480px;margin:0 auto;padding:12px}   /* phone-width frame, centered on any screen */
+    main{max-width:480px;margin:0 auto;padding:10px;font-size:14.5px}   /* phone-width frame; tighter base scale */
     header{max-width:480px;margin:0 auto}
-    header{padding:13px 14px}
-    .brand h1{font-size:15px;line-height:1.15}
-    .brand p{font-size:8.5px;letter-spacing:.5px}
-    .logo{width:36px;height:36px;font-size:16px}
-    .roles{order:3;width:100%;justify-content:space-between;margin-top:2px}
-    .roles button{flex:1;padding:9px 8px;font-size:12px}
+    header{padding:9px 12px;gap:8px}
+    .brand{gap:9px}
+    .brand h1{font-size:14px;line-height:1.1}
+    .brand p{font-size:8px;letter-spacing:.4px;margin-top:0}
+    .logo{width:31px;height:31px;font-size:13.5px;border-radius:8px}
+    .roles{order:3;width:100%;justify-content:space-between;margin-top:0;padding:3px;border-radius:9px}
+    .roles button{flex:1;padding:6px 8px;font-size:11.5px}
+    /* badge + logout ride the brand line, hard right, vertically centered with the logo */
+    .hdr-account{display:flex;align-items:center;gap:5px;flex:none;align-self:center;margin-left:auto;order:2}
+    .brand{margin-right:0;flex:1 1 auto;min-width:0}
+    .brand h1{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .user-badge{padding:3px 6px;font-size:8.5px;letter-spacing:.2px;gap:3px}
+    .user-badge::before{width:5px;height:5px}
+    .logout-btn{padding:3px 7px;font-size:9.5px;margin-left:0}
     .clock,.qmeta{display:none}
 
     /* ---------- stat cards ---------- */
-    .stats{grid-template-columns:repeat(2,1fr);gap:9px}
-    .stat{padding:11px}
-    .stat .k{font-size:9.5px;letter-spacing:.7px}
-    .stat .n{font-size:21px;margin-top:4px}
-    .stat .u{font-size:10px}
+    .stats{grid-template-columns:repeat(2,1fr);gap:7px}
+    .stat{padding:9px 10px}
+    .stat .k{font-size:9px;letter-spacing:.6px}
+    .stat .n{font-size:18px;margin-top:2px}
+    .stat .u{font-size:9.5px}
     .stats[style*="repeat(3"]{grid-template-columns:repeat(3,1fr)!important}
 
     /* ---------- panels / sections ---------- */
-    .panel .head{padding:12px 13px}
-    .panel .head h2{font-size:12px}
-    .panel .body{padding:13px}
-    .sectiontitle{margin:18px 2px 10px}
-    .sectiontitle h3{font-size:13px}
+    .panel .head{padding:10px 11px}
+    .panel .head h2{font-size:11.5px}
+    .panel .body{padding:11px}
+    .sectiontitle{margin:15px 2px 8px}
+    .sectiontitle h3{font-size:12px}
 
     /* ---------- sub-tabs ---------- */
     .subtabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
     .subtabs::-webkit-scrollbar{display:none}
-    .subtabs button{flex:none;padding:9px 13px;font-size:12.5px;white-space:nowrap}
+    .subtabs button{flex:none;padding:7px 11px;font-size:12px;white-space:nowrap}
 
     /* ---------- buttons ---------- */
-    button.btn{padding:11px 14px;font-size:13px}
-    button.btn.sm{padding:8px 10px;font-size:12px}
+    button.btn{padding:9px 13px;font-size:12.5px}
+    button.btn.sm{padding:7px 10px;font-size:11.5px}
 
     /* ====================================================================
        SHARED FOUNDATION for every list row.
@@ -1328,12 +1336,14 @@
     </div>
   </div>
   <div class="clock" id="clock">--:--:--</div>
+  <div class="hdr-account">
+    <span class="user-badge" id="user_badge" hidden></span>
+    <button class="logout-btn" id="logout_btn" onclick="doLogout()" title="Sign out" hidden>Log out</button>
+  </div>
   <div class="roles" id="roles">
     <button data-r="security">Security · Gate</button>
     <button data-r="warehouse" class="active">Warehouse</button>
   </div>
-  <span class="user-badge" id="user_badge" hidden></span>
-  <button class="logout-btn" id="logout_btn" onclick="doLogout()" title="Sign out" hidden>Log out</button>
 </header>
 
 <main>
@@ -1833,13 +1843,18 @@ function attachLiveSync(){
     if(sig===lastSig) return;          // this is our own write echoing back — ignore
     try{
       const next=JSON.parse(incoming);
-      // masters are locally authoritative if this device just seeded/edited them
+      // Per-record merge: keep the newest version of each vehicle/icm, union logs,
+      // honour clears/tombstones. A stale device can no longer clobber our records.
       FB_APPLYING=true;
-      STATE=next;
+      STATE=mergeStates(STATE, next);
       normalizeState();
-      lastSig=sig;
+      rememberSaved();
+      lastSig=sigOf(snapshotState());
       render(); renderSyncBadge();
       FB_APPLYING=false;
+      // if the merge produced something different from what the peer sent, push it back
+      // so everyone converges on the union (debounced via the normal save guard).
+      try{ if(sigOf(JSON.stringify(next))!==lastSig) queueMicrotask(()=>{ try{ save(); }catch(_){} }); }catch(_){}
     }catch(e){ console.error('sync apply failed',e); FB_APPLYING=false; }
   });
 }
@@ -1853,12 +1868,94 @@ function snapshotState(){
   if(Array.isArray(s.archive) && s.archive.length>1000) s.archive=s.archive.slice(-1000);
   return JSON.stringify(s);
 }
+// ===================== PER-RECORD MERGE SYNC =====================
+// Each vehicle/icm carries an `updatedAt`. On save we stamp only the records that
+// actually changed since the last save. On sync we MERGE by id, keeping the newest
+// version of each record — so two devices editing different vehicles never clobber
+// each other, and a stale device can't drag back records it hasn't touched.
+let _lastSavedById={vehicles:{},icms:{}};
+function _indexById(arr){ const m={}; (arr||[]).forEach(x=>{ if(x&&x.id!=null) m[x.id]=x; }); return m; }
+function stampChanges(){
+  const t=now();
+  ['vehicles','icms'].forEach(key=>{
+    const prev=_lastSavedById[key]||{};
+    (STATE[key]||[]).forEach(rec=>{
+      if(!rec||rec.id==null) return;
+      const before=prev[rec.id];
+      // new record, or contents differ from last save → it changed → stamp it
+      if(!before || JSON.stringify(stripMeta(before))!==JSON.stringify(stripMeta(rec))){
+        rec.updatedAt=t;
+      }
+    });
+  });
+}
+function stripMeta(o){ const c=Object.assign({},o); delete c.updatedAt; return c; }
+function rememberSaved(){
+  _lastSavedById={ vehicles:_indexById((STATE.vehicles||[]).map(v=>JSON.parse(JSON.stringify(v)))),
+                   icms:_indexById((STATE.icms||[]).map(v=>JSON.parse(JSON.stringify(v)))) };
+}
+// Merge incoming records into local by id, newest updatedAt wins. Deletions are
+// handled via a tombstone list so a delete on one device propagates.
+function mergeRecords(localArr, incomingArr, tombstones){
+  const out={}, tomb=tombstones||{};
+  (localArr||[]).forEach(r=>{ if(r&&r.id!=null) out[r.id]=r; });
+  (incomingArr||[]).forEach(r=>{
+    if(!r||r.id==null) return;
+    const cur=out[r.id];
+    if(!cur){ out[r.id]=r; return; }
+    const ti=r.updatedAt||0, tc=cur.updatedAt||0;
+    if(ti>=tc) out[r.id]=r;          // newest wins (ties → incoming, harmless)
+  });
+  // drop anything a newer tombstone deleted
+  Object.keys(tomb).forEach(id=>{ const td=tomb[id]||0; const rec=out[id]; if(rec && (rec.updatedAt||0) < td) delete out[id]; });
+  return Object.values(out);
+}
+function mergeStates(local, incoming){
+  // tombstones: id → deletedAt (merge both sides' tombstones, newest wins)
+  const tomb={};
+  [local.tombstones,incoming.tombstones].forEach(ts=>{ if(ts) Object.keys(ts).forEach(id=>{ tomb[id]=Math.max(tomb[id]||0, ts[id]||0); }); });
+  const merged=Object.assign({}, incoming, local);   // start from local, fill structure
+  merged.vehicles = mergeRecords(local.vehicles, incoming.vehicles, tomb);
+  merged.icms     = mergeRecords(local.icms,     incoming.icms,     tomb);
+  // history & archive are append-only logs → union by a cheap key, keep all
+  merged.history  = unionLog(local.history, incoming.history);
+  merged.archive  = unionLog(local.archive, incoming.archive);
+  // sequence counters: take the max so ids never collide
+  merged.seq    = Math.max(local.seq||1, incoming.seq||1);
+  merged.icmSeq = Math.max(local.icmSeq||1, incoming.icmSeq||1);
+  // clear/rollover awareness: newest clear wins, and clears everything older
+  merged.clearedAt = Math.max(local.clearedAt||0, incoming.clearedAt||0);
+  if(merged.clearedAt){
+    merged.vehicles = merged.vehicles.filter(v=>(v.updatedAt||0) >= merged.clearedAt);
+    merged.icms     = merged.icms.filter(v=>(v.updatedAt||0) >= merged.clearedAt);
+  }
+  merged.lastRollover = incoming.lastRollover || local.lastRollover;
+  merged.tombstones = tomb;
+  // masters stay locally authoritative (existing rule)
+  const lM=local.masters||{}, iM=incoming.masters||{};
+  const lC=((lM.sizes||[]).length)+((lM.docks||[]).length);
+  const iC=((iM.sizes||[]).length)+((iM.docks||[]).length);
+  merged.masters = (lC>0 && iC<lC) ? lM : (incoming.masters||local.masters);
+  return merged;
+}
+function unionLog(a,b){
+  const seen=new Set(), out=[];
+  (a||[]).concat(b||[]).forEach(e=>{
+    const k=(e&&e.id!=null)?('id:'+e.id):JSON.stringify(e);
+    if(!seen.has(k)){ seen.add(k); out.push(e); }
+  });
+  return out;
+}
+// =================================================================
+
 async function save(){
   if(FB_APPLYING) return;              // don't echo a change we just received
   if(saving){pending=true;return;}
   saving=true;
+  stampChanges();                      // mark changed vehicles/icms with a fresh updatedAt
   const snapshot=snapshotState();
   lastSig=sigOf(snapshot);             // mark as our own write so the listener ignores the echo
+  rememberSaved();                     // remember what we just persisted (for next diff)
   try{
     if(FB_READY && FB_REF){ await FB_REF.set(JSON.parse(snapshot)); }
     lsSet(snapshot);                   // always keep a local copy too
@@ -2563,7 +2660,7 @@ function cycleICM(id){
 async function resetData(){
   if(!await askConfirm('Delete ALL vehicles, ICMs, archive and learning history?\nYour Masters (vehicle types, docks, calc times) are KEPT.\nThis clears data for everyone and cannot be undone.','Delete all data',true))return;
   const keepMasters=STATE.masters;   // preserve configuration
-  STATE={vehicles:[],history:[],seq:1,icms:[],icmSeq:1,archive:[],masters:keepMasters,lastRollover:STATE.lastRollover};
+  STATE={vehicles:[],history:[],seq:1,icms:[],icmSeq:1,archive:[],masters:keepMasters,lastRollover:STATE.lastRollover,clearedAt:now()};
   save(); render();
   toast('All vehicle data cleared — masters kept');
 }
@@ -4789,6 +4886,11 @@ async function sync(){
     const sig=sigOf(raw);
     if(sig===lastSig) return;
     const incoming=JSON.parse(raw);
+    // Per-record merge (newest version of each record wins; clears/tombstones honoured).
+    STATE=mergeStates(STATE, incoming); normalizeState(); rememberSaved();
+    lastSig=sigOf(snapshotState()); render(); renderSyncBadge();
+    return;
+    // (legacy masters guard retained below but unreachable — merge handles masters)
     // Masters locally authoritative: never let an empty/smaller incoming wipe them.
     const localM=STATE.masters||{}, inM=incoming.masters||{};
     const localCount=((localM.sizes||[]).length)+((localM.docks||[]).length);
@@ -4903,6 +5005,14 @@ function dailyRollover(){
   if(done.length){ STATE.archive=STATE.archive.concat(done); }
   STATE.vehicles=keep;
   STATE.lastRollover=todayKey;
+  // Stamp the rollover like a clear, so a stale device still holding yesterday's
+  // vehicles cannot resurrect them via sync (clear-awareness guard covers this).
+  const rt=now();
+  STATE.clearedAt=rt;
+  // Re-stamp surviving (pending) vehicles to NOW so the clearedAt filter never purges
+  // them on merge — only truly-old ghost records from stale devices get dropped.
+  STATE.vehicles.forEach(v=>{ v.updatedAt=rt; });
+  (STATE.icms||[]).forEach(v=>{ v.updatedAt=rt; });
   save(); render();
   if(done.length) toast('New day (IST) — '+done.length+' completed vehicle'+(done.length>1?'s':'')+' archived');
 }
