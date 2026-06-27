@@ -2034,15 +2034,13 @@ function mergeStates(local, incoming){
   // sequence counters: take the max so ids never collide
   merged.seq    = Math.max(local.seq||1, incoming.seq||1);
   merged.icmSeq = Math.max(local.icmSeq||1, incoming.icmSeq||1);
-  // clear/rollover awareness: newest clear wins. Drop a record ONLY if it was explicitly
-  // stamped with a time older than the clear (a genuine pre-clear ghost). Records with NO
-  // updatedAt are grandfathered in (they predate per-record stamping and must not vanish).
+  // clear/rollover awareness: newest clear wins (tracked for reference).
+  // We deliberately DO NOT delete vehicles by (updatedAt < clearedAt) — that blanket
+  // filter also removed legitimate active vehicles whose stamp predated the last clear
+  // (clock skew, or simply not re-saved since the clear), which made called vehicles
+  // vanish and the Move-to-Yard button disappear. Resurrection of genuinely-cleared
+  // records is prevented by per-id tombstones in mergeRecords instead.
   merged.clearedAt = Math.max(local.clearedAt||0, incoming.clearedAt||0);
-  if(merged.clearedAt){
-    const stale=v=>v && v.updatedAt!=null && v.updatedAt < merged.clearedAt;
-    merged.vehicles = merged.vehicles.filter(v=>!stale(v));
-    merged.icms     = merged.icms.filter(v=>!stale(v));
-  }
   merged.lastRollover = incoming.lastRollover || local.lastRollover;
   merged.forceLogoutAt = Math.max(local.forceLogoutAt||0, incoming.forceLogoutAt||0);
   merged.tombstones = tomb;
@@ -2769,7 +2767,12 @@ function cycleICM(id){
 async function resetData(){
   if(!await askConfirm('Delete ALL vehicles, ICMs, archive and learning history?\nYour Masters (vehicle types, docks, calc times) are KEPT.\nThis clears data for everyone and cannot be undone.','Delete all data',true))return;
   const keepMasters=STATE.masters;   // preserve configuration
-  STATE={vehicles:[],history:[],seq:1,icms:[],icmSeq:1,archive:[],masters:keepMasters,lastRollover:STATE.lastRollover,clearedAt:now()};
+  const ct=now();
+  // Tombstone every existing vehicle/icm id so a stale device cannot resurrect them.
+  const tomb=Object.assign({}, STATE.tombstones||{});
+  (STATE.vehicles||[]).forEach(v=>{ if(v&&v.id!=null) tomb[v.id]=ct; });
+  (STATE.icms||[]).forEach(v=>{ if(v&&v.id!=null) tomb[v.id]=ct; });
+  STATE={vehicles:[],history:[],seq:1,icms:[],icmSeq:1,archive:[],masters:keepMasters,lastRollover:STATE.lastRollover,clearedAt:ct,tombstones:tomb};
   save(); render();
   toast('All vehicle data cleared — masters kept');
 }
@@ -5121,12 +5124,14 @@ function dailyRollover(){
   if(done.length){ STATE.archive=STATE.archive.concat(done); }
   STATE.vehicles=keep;
   STATE.lastRollover=todayKey;
-  // Stamp the rollover like a clear, so a stale device still holding yesterday's
-  // vehicles cannot resurrect them via sync (clear-awareness guard covers this).
   const rt=now();
   STATE.clearedAt=rt;
-  // Re-stamp surviving (pending) vehicles to NOW so the clearedAt filter never purges
-  // them on merge — only truly-old ghost records from stale devices get dropped.
+  // Tombstone ONLY the archived (done) vehicles, so a stale device can't resurrect
+  // yesterday's completed vehicles — while surviving pending vehicles are untouched.
+  const tomb=Object.assign({}, STATE.tombstones||{});
+  done.forEach(v=>{ if(v&&v.id!=null) tomb[v.id]=rt; });
+  STATE.tombstones=tomb;
+  // Re-stamp surviving (pending) vehicles to NOW so they're never seen as stale.
   STATE.vehicles.forEach(v=>{ v.updatedAt=rt; });
   (STATE.icms||[]).forEach(v=>{ v.updatedAt=rt; });
   save(); render();
