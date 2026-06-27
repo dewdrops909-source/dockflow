@@ -1432,6 +1432,13 @@
         </div>
         <button class="btn danger sm" onclick="resetData()">Clear data</button>
       </div>
+      <div class="ov-danger">
+        <div>
+          <div class="ov-danger-t">Log out all devices</div>
+          <div class="ov-danger-s">Signs out every phone and PC using DockFlow. Use after an update so all devices reload and sign in fresh.</div>
+        </div>
+        <button class="btn danger sm" onclick="forceLogoutAllDevices()">Log out all</button>
+      </div>
     </div>
 
     <!-- CALL TO ACTION -->
@@ -1721,7 +1728,7 @@ function doLogin(){
   const err=document.getElementById('login_err');
   if(!acct || acct.pass!==p){ if(err) err.hidden=false; return; }
   if(err) err.hidden=true;
-  try{ localStorage.setItem(AUTH_KEY, JSON.stringify({user:u, role:acct.role, ver:(window.BUILD_VERSION||'')})); }catch(e){}
+  try{ localStorage.setItem(AUTH_KEY, JSON.stringify({user:u, role:acct.role, ver:(window.BUILD_VERSION||''), loginAt:Date.now()})); }catch(e){}
   document.getElementById('login_pass').value='';
   document.getElementById('login_overlay').hidden=true;
   applyRole(acct.role);
@@ -1737,6 +1744,32 @@ function doLogout(){
   document.getElementById('login_pass').value='';
   document.getElementById('login_overlay').hidden=false;
 }
+
+// Auto-update: periodically re-fetch THIS page with a cache-buster and read the
+// deployed BUILD_VERSION out of it. If the server has a newer build than the one
+// running, hard-reload (with a cache-buster) so the new code loads automatically.
+// This removes the need to manually close tabs / append ?v= after a deploy.
+let _updateReloading=false;
+async function checkForUpdate(){
+  if(_updateReloading) return;
+  try{
+    const url=location.pathname + '?_=' + Date.now();   // always bypass cache
+    const res=await fetch(url, {cache:'no-store'});
+    if(!res || !res.ok) return;
+    const text=await res.text();
+    const m=text.match(/window\.BUILD_VERSION\s*=\s*["']([^"']+)["']/);
+    if(!m) return;
+    const serverVer=m[1];
+    const myVer=window.BUILD_VERSION||'';
+    if(serverVer && myVer && serverVer!==myVer){
+      _updateReloading=true;
+      try{ toast('New version '+serverVer+' — updating…'); }catch(e){}
+      // hard reload with a cache-buster so the browser fetches the fresh HTML
+      setTimeout(()=>{ try{ location.replace(location.pathname + '?v=' + encodeURIComponent(serverVer)); }catch(e){ location.reload(); } }, 600);
+    }
+  }catch(e){ /* offline or fetch blocked — ignore, try again next tick */ }
+}
+
 
 function checkAuth(){
   let saved=null;
@@ -1755,6 +1788,38 @@ function checkAuth(){
   } else {
     document.getElementById('login_overlay').hidden=false;
   }
+}
+
+// Remote logout: if STATE.forceLogoutAt is newer than this device's login time,
+// the device signs itself out. Lets an admin log out ALL devices from one place.
+function checkRemoteLogout(){
+  try{
+    const flag=(STATE&&STATE.forceLogoutAt)||0;
+    if(!flag) return;
+    let saved=null;
+    try{ saved=JSON.parse(localStorage.getItem(AUTH_KEY)||'null'); }catch(e){}
+    if(!saved) return;                       // already logged out
+    const myLogin=saved.loginAt||0;
+    if(flag>myLogin){
+      try{ localStorage.removeItem(AUTH_KEY); }catch(e){}
+      try{ toast('Signed out remotely by admin'); }catch(e){}
+      document.body.classList.remove('role-security');
+      document.body.classList.remove('role-admin');
+      const lo=document.getElementById('logout_btn'); if(lo) lo.hidden=true;
+      const ub=document.getElementById('user_badge'); if(ub) ub.hidden=true;
+      const ov=document.getElementById('login_overlay'); if(ov) ov.hidden=false;
+    }
+  }catch(e){}
+}
+
+// Admin action — log out every device sharing this room.
+async function forceLogoutAllDevices(){
+  if(!await askConfirm('Sign out ALL devices (every phone & PC using DockFlow)?\nEveryone will need to log in again.','Log out all devices',true,'Cancel')) return;
+  STATE.forceLogoutAt=Date.now();
+  save();
+  toast('All devices will be signed out');
+  // log this device out too, after the broadcast
+  setTimeout(()=>{ try{ doLogout(); }catch(e){} }, 400);
 }
 
 let lastSig='';
@@ -1840,6 +1905,7 @@ function attachLiveSync(){
       lastSig=sigOf(snapshotState());
       render(); renderSyncBadge();
       FB_APPLYING=false;
+      checkRemoteLogout();
       try{ if(sigOf(JSON.stringify(next))!==lastSig) queueMicrotask(()=>{ try{ save(); }catch(_){} }); }catch(_){}
     }catch(e){ console.error('sync apply failed',e); FB_APPLYING=false; }
   });
@@ -1916,6 +1982,7 @@ function mergeStates(local, incoming){
     merged.icms     = merged.icms.filter(v=>(v.updatedAt||0) >= merged.clearedAt);
   }
   merged.lastRollover = incoming.lastRollover || local.lastRollover;
+  merged.forceLogoutAt = Math.max(local.forceLogoutAt||0, incoming.forceLogoutAt||0);
   merged.tombstones = tomb;
   // masters stay locally authoritative (existing rule)
   const lM=local.masters||{}, iM=incoming.masters||{};
@@ -4834,6 +4901,7 @@ document.getElementById('roles').addEventListener('click',e=>{
 });
 // check saved session on load (gate the app)
 checkAuth();
+try{ checkRemoteLogout(); }catch(e){}
 
 // warehouse sub-tabs
 document.getElementById('wh_subtabs').addEventListener('click',e=>{
@@ -4868,6 +4936,7 @@ async function sync(){
     // Per-record merge (newest version of each record wins; clears/tombstones honoured).
     STATE=mergeStates(STATE, incoming); normalizeState(); rememberSaved();
     lastSig=sigOf(snapshotState()); render(); renderSyncBadge();
+    checkRemoteLogout();
   }catch(e){}
 }
 async function refreshData(){
@@ -4915,6 +4984,8 @@ window.addEventListener('unhandledrejection',ev=>{ try{ const m=(ev.reason&&ev.r
   setInterval(sync,4000);     // pull peers' updates
   setInterval(render,30000);  // refresh waited/eta figures
   setInterval(dailyRollover,60000); // check for midnight purge each minute
+  setInterval(checkForUpdate,120000); // auto-update: look for a newer deployed build every 2 min
+  setTimeout(checkForUpdate,8000);    // and once shortly after load
 })();
 
 function initShiftLog(){
