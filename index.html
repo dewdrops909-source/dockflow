@@ -1032,6 +1032,8 @@
     background:var(--panel3);border:1px solid var(--blue-sky);border-radius:8px;padding:5px 11px;
     box-shadow:0 6px 18px rgba(0,0,0,.5)}
   .drv-num[hidden]{display:none}
+  .build-tag{position:fixed;right:8px;bottom:6px;z-index:90;pointer-events:none;
+    font:600 9px var(--mono);letter-spacing:.5px;color:var(--dim);opacity:.4}
   .drv-btn.drv-empty{opacity:.5}
   .drv-btn.drv-empty.on{background:rgba(255,255,255,.06);border-color:var(--dim);box-shadow:none}
   #allvehicles .c-veh,.logrow .c-veh,.cta-row .c-veh{overflow:visible!important}
@@ -1276,6 +1278,8 @@
   };
   // shared "room" — all devices using the same room code see the same data.
   const FIREBASE_ROOM = "gnsc-main";
+  // Build tag — bump this every deploy so you can confirm a device loaded the latest build.
+  const BUILD_VERSION = "v13";
   function firebaseConfigured(){
     return FIREBASE_CONFIG.databaseURL && FIREBASE_CONFIG.databaseURL.indexOf("PASTE_")===-1;
   }
@@ -4872,6 +4876,7 @@ window.addEventListener('unhandledrejection',ev=>{ try{ const m=(ev.reason&&ev.r
   lastSig=sigOf(JSON.stringify(STATE));
   try{ attachLiveSync(); }catch(e){ console.error('live sync attach failed',e); }
   try{ renderSyncBadge(); }catch(e){}
+  try{ const bt=document.getElementById('build_tag'); if(bt) bt.textContent='DockFlow '+BUILD_VERSION; }catch(e){}
   try{ setNow(); }catch(e){}
   try{ clock(); }catch(e){}
   try{ render(); }catch(e){ console.error('render failed',e); toast('Render error: '+e.message); }
@@ -4973,5 +4978,6 @@ function dailyRollover(){
   if(done.length) toast('New day (IST) — '+done.length+' completed vehicle'+(done.length>1?'s':'')+' archived');
 }
 </script>
+<div id="build_tag" class="build-tag"></div>
 </body>
 </html>
