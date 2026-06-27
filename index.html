@@ -1280,7 +1280,7 @@
   // shared "room" — all devices using the same room code see the same data.
   const FIREBASE_ROOM = "gnsc-main";
   // Build tag — bump this every deploy so you can confirm a device loaded the latest build.
-  window.BUILD_VERSION = "v13";
+  window.BUILD_VERSION = "v19";
   function firebaseConfigured(){
     return FIREBASE_CONFIG.databaseURL && FIREBASE_CONFIG.databaseURL.indexOf("PASTE_")===-1;
   }
@@ -1928,7 +1928,12 @@ function snapshotState(){
 let _lastSavedById={vehicles:{},icms:{}};
 function _indexById(arr){ const m={}; (arr||[]).forEach(x=>{ if(x&&x.id!=null) m[x.id]=x; }); return m; }
 function stampChanges(){
-  const t=now();
+  // Use a timestamp strictly greater than any updatedAt already in the state, so a
+  // change is ALWAYS newer than the version it was based on (avoids same-millisecond
+  // ties that could let a stale peer copy win the merge and revert a change).
+  let maxSeen=0;
+  ['vehicles','icms'].forEach(key=>(STATE[key]||[]).forEach(r=>{ if(r&&r.updatedAt>maxSeen) maxSeen=r.updatedAt; }));
+  const t=Math.max(now(), maxSeen+1);
   ['vehicles','icms'].forEach(key=>{
     const prev=_lastSavedById[key]||{};
     (STATE[key]||[]).forEach(rec=>{
@@ -1956,7 +1961,9 @@ function mergeRecords(localArr, incomingArr, tombstones){
     const cur=out[r.id];
     if(!cur){ out[r.id]=r; return; }
     const ti=r.updatedAt||0, tc=cur.updatedAt||0;
-    if(ti>=tc) out[r.id]=r;          // newest wins (ties → incoming, harmless)
+    // Monotonic stamps (see stampChanges) guarantee a real change is strictly newer, so
+    // genuine updates always win. >= on exact ties ensures all devices converge.
+    if(ti>=tc) out[r.id]=r;
   });
   // drop anything a newer tombstone deleted
   Object.keys(tomb).forEach(id=>{ const td=tomb[id]||0; const rec=out[id]; if(rec && (rec.updatedAt||0) < td) delete out[id]; });
@@ -3855,7 +3862,7 @@ function renderToday(){
 
   // PENDING-GRN deck: previous-day vehicles whose GRN is not done.
   const grnPending=STATE.vehicles
-    .filter(v=>!enteredToday(v) && unloaded(v) && v.grn!=='done')
+    .filter(v=>!enteredToday(v) && unloaded(v) && grnEligible(v) && v.grn!=='done')
     .sort((a,b)=>a.gateTime-b.gateTime);
 
   const out=all.filter(v=>v.status==='done').length;
