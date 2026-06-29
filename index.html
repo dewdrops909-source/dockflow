@@ -2204,10 +2204,10 @@ function addAlert(kind, v, msg){
 }
 function activeAlerts(){ return (STATE.alerts||[]).filter(a=>!a.seen); }
 function dismissAlert(id){
-  const a=(STATE.alerts||[]).find(x=>x.id===id); if(a){ a.seen=true; save(); renderSecurity(); updateAlertSound(); }
+  const a=(STATE.alerts||[]).find(x=>x.id===id); if(a){ a.seen=true; save(); render(); updateAlertSound(); }
 }
 function dismissAllAlerts(){
-  (STATE.alerts||[]).forEach(a=>a.seen=true); save(); renderSecurity(); updateAlertSound();
+  (STATE.alerts||[]).forEach(a=>a.seen=true); save(); render(); updateAlertSound();
 }
 
 /* repeating beep while any alert is active (WebAudio, no file needed) */
@@ -2872,15 +2872,37 @@ async function resetMasters(){
 /* ============================================================
    RENDER
    ============================================================ */
+// Capture the scrollTop of every inner-scrolling container so a re-render (triggered by
+// pressing an action button) doesn't snap long lists back to the top. Inner lists use
+// class .listwrap and are rebuilt via innerHTML, so they have no stable id of their own —
+// we key each one by the id of its nearest stable ancestor. Also handles #todaylist and
+// anything tagged data-keep-scroll.
+function captureScroll(){
+  const map={ _winX:window.scrollX, _winY:window.scrollY };
+  document.querySelectorAll('.listwrap').forEach(w=>{
+    if(w.scrollTop<=0) return;
+    const box=w.closest('[id]'); if(box) map['box:'+box.id]=w.scrollTop;
+  });
+  document.querySelectorAll('[data-keep-scroll][id]').forEach(el=>{ if(el.scrollTop>0) map['kid:'+el.id]=el.scrollTop; });
+  const tl=document.getElementById('todaylist'); if(tl && tl.scrollTop>0) map['kid:todaylist']=tl.scrollTop;
+  return map;
+}
+function restoreScroll(map){
+  if(!map) return;
+  window.scrollTo(map._winX||0, map._winY||0);
+  Object.keys(map).forEach(k=>{
+    if(k.startsWith('box:')){
+      const box=document.getElementById(k.slice(4)); if(!box) return;
+      const w=box.querySelector('.listwrap'); if(w) w.scrollTop=map[k];
+    } else if(k.startsWith('kid:')){
+      const el=document.getElementById(k.slice(4)); if(el) el.scrollTop=map[k];
+    }
+  });
+}
 function render(){
-  // Preserve scroll position across the re-render. Two cases:
-  //  - most lists (incl. Call to Action queue) scroll with the WINDOW
-  //  - the All Vehicles list (#todaylist) scrolls INSIDE its own max-height box
-  // Capture both, rebuild, then restore so marking zone/papers on a long list doesn't
-  // snap the user back to the top.
-  const _sx=window.scrollX, _sy=window.scrollY;
-  const _tl=document.getElementById('todaylist');
-  const _tlTop=_tl?_tl.scrollTop:0;
+  // Preserve scroll position across the re-render so taking an action (marking zone/papers,
+  // moving to yard, etc.) doesn't jump long lists to the top.
+  const _scroll=captureScroll();
   renderSecurity();
   renderWarehouse();
   renderBoard();
@@ -2888,11 +2910,8 @@ function render(){
   renderMasters();
   refreshVendorList();
   populateSizeDropdown();
-  requestAnimationFrame(()=>{
-    window.scrollTo(_sx, _sy);
-    const tl=document.getElementById('todaylist');
-    if(tl) tl.scrollTop=_tlTop;
-  });
+  restoreScroll(_scroll);                                   // immediate restore
+  requestAnimationFrame(()=>{ restoreScroll(_scroll); });   // and after paint
 }
 
 function populateSizeDropdown(){
