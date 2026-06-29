@@ -2129,6 +2129,11 @@ function mergeStates(local, incoming){
   const merged=Object.assign({}, incoming, local);   // start from local, fill structure
   merged.vehicles = mergeRecords(local.vehicles, incoming.vehicles, tomb);
   merged.icms     = mergeRecords(local.icms,     incoming.icms,     tomb);
+  // alerts: union by id so an alert raised on one device reaches every device (previously
+  // alerts fell through Object.assign and "local wins" clobbered incoming alerts, letting
+  // the alert banner and the actionable vehicle row drift apart). Dismissal must win:
+  // if EITHER copy is seen, the merged alert is seen, so a dismiss propagates everywhere.
+  merged.alerts   = mergeAlerts(local.alerts, incoming.alerts);
   // history & archive are append-only logs → union by a cheap key, keep all
   merged.history  = unionLog(local.history, incoming.history);
   merged.archive  = unionLog(local.archive, incoming.archive);
@@ -2151,6 +2156,22 @@ function mergeStates(local, incoming){
   const iC=((iM.sizes||[]).length)+((iM.docks||[]).length);
   merged.masters = (lC>0 && iC<lC) ? lM : (incoming.masters||local.masters);
   return merged;
+}
+// Merge alerts by id. Union both sides; if either copy was dismissed (seen), the
+// merged alert stays seen so a dismissal on one device propagates to all.
+function mergeAlerts(localArr, incomingArr){
+  const out={};
+  (localArr||[]).forEach(a=>{ if(a&&a.id!=null) out[a.id]=Object.assign({},a); });
+  (incomingArr||[]).forEach(a=>{
+    if(!a||a.id==null) return;
+    const cur=out[a.id];
+    if(!cur){ out[a.id]=Object.assign({},a); return; }
+    // keep one copy; seen wins (dismissal is sticky across devices)
+    out[a.id]=Object.assign({}, cur, a, { seen: !!(cur.seen||a.seen) });
+  });
+  let arr=Object.values(out).sort((x,y)=>(x.at||0)-(y.at||0));
+  if(arr.length>60) arr=arr.slice(-60);   // keep bounded, same as addAlert
+  return arr;
 }
 function unionLog(a,b){
   const seen=new Set(), out=[];
@@ -3198,8 +3219,37 @@ function renderSecAlerts(){
       </div>`).join('');
   updateAlertSound();
 }
+// The "Move to Yard" button lives on the vehicle ROW and shows when the vehicle's status
+// is 'call_alert'. An alert is only a notification — it must not be the thing you act on.
+// But the alert and the vehicle's status can briefly desync across devices (the alert
+// arrives, the status change hasn't yet), which leaves the alert visible with no row
+// button. This reconciler closes that gap: for any active 'toyard' alert whose vehicle is
+// still at the gate (waiting / no terminal status), it restores 'call_alert' so the row —
+// and its action button — always appears. It never overrides a vehicle that has genuinely
+// moved on (yard/docked/awaiting/done), so a stale alert can't pull a vehicle backward.
+function reconcileYardCalls(){
+  const alerts=(STATE.alerts||[]).filter(a=>!a.seen && a.kind==='toyard');
+  if(!alerts.length) return;
+  let changed=false;
+  alerts.forEach(a=>{
+    const v=(STATE.vehicles||[]).find(x=>x.id===a.vehId)
+          ||(STATE.vehicles||[]).find(x=>x.veh===a.veh && x.status!=='done');
+    if(!v) return;                                  // vehicle not on this device yet
+    if(v.status==='call_alert') return;             // already actionable
+    if(v.status==='yard'||v.status==='docked'||v.status==='awaiting'||v.status==='done'){
+      a.seen=true; changed=true; return;            // already moved on → clear stale alert
+    }
+    // waiting / unexpected gate state → restore the pending-yard flag from the alert
+    v.status='call_alert';
+    if(!v.zone && a.zone) v.zone=a.zone;
+    if(!v.alertUntil || v.alertUntil<now()) v.alertUntil=now()+30*60000;
+    changed=true;
+  });
+  if(changed) save();
+}
 function renderSecurity(){
   renderSecAlerts();
+  reconcileYardCalls();   // ensure any outstanding "to yard" call shows its row + button
   const inside=insideGNSC();
   const f=s=>inside.filter(v=>s.includes(v.status)).length;
   const wAll=f(['waiting','call_alert']);
