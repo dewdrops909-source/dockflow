@@ -1987,10 +1987,16 @@ function stampChanges(){
   let maxSeen=0;
   ['vehicles','icms'].forEach(key=>(STATE[key]||[]).forEach(r=>{ if(r&&r.updatedAt>maxSeen) maxSeen=r.updatedAt; }));
   const t=Math.max(now(), maxSeen+1);
+  const tomb=STATE.tombstones||{};
   ['vehicles','icms'].forEach(key=>{
     const prev=_lastSavedById[key]||{};
     (STATE[key]||[]).forEach(rec=>{
       if(!rec||rec.id==null) return;
+      // NEVER re-stamp a tombstoned (archived/deleted) record. Stamping a briefly
+      // re-merged archived vehicle with a fresh updatedAt would make it newer than its
+      // own tombstone and resurrect it permanently — why gated-out vehicles from a
+      // previous day refused to clear. Leave its old stamp so the tombstone removes it.
+      if(tomb[rec.id]!=null) return;
       const before=prev[rec.id];
       // new record, or contents differ from last save → it changed → stamp it
       if(!before || JSON.stringify(stripMeta(before))!==JSON.stringify(stripMeta(rec))){
@@ -2045,7 +2051,10 @@ function mergeStates(local, incoming){
   // filter also removed legitimate active vehicles whose stamp predated the last clear,
   // making called vehicles vanish. Resurrection is prevented by per-id tombstones instead.
   merged.clearedAt = Math.max(local.clearedAt||0, incoming.clearedAt||0);
-  merged.lastRollover = incoming.lastRollover || local.lastRollover;
+  // lastRollover: take the LATER IST day-key (monotonic). incoming-wins previously let a
+  // peer still on yesterday's key revert a device that had already rolled, causing re-rolls.
+  merged.lastRollover = [local.lastRollover, incoming.lastRollover]
+    .filter(Boolean).sort().pop() || incoming.lastRollover || local.lastRollover;
   merged.forceLogoutAt = Math.max(local.forceLogoutAt||0, incoming.forceLogoutAt||0);
   merged.tombstones = tomb;
   // masters stay locally authoritative (existing rule)
@@ -5193,6 +5202,7 @@ window.addEventListener('unhandledrejection',ev=>{ try{ const m=(ev.reason&&ev.r
   setInterval(sync,4000);     // pull peers' updates
   setInterval(render,30000);  // refresh waited/eta figures
   setInterval(dailyRollover,60000); // check for midnight purge each minute
+  dailyRollover();                  // and once now, so prior-day releases clear on open
   setInterval(checkForUpdate,120000); // auto-update: look for a newer deployed build every 2 min
   setTimeout(checkForUpdate,8000);    // and once shortly after load
 })();
@@ -5243,24 +5253,57 @@ function grnEligible(v){
 }
 
 /* ---- Midnight rollover: archive gated-out vehicles out of live views ---- */
+// A vehicle is "from a previous IST day" if its gate-out day (doneAt, else gateTime) is
+// before today's IST day. We archive those regardless of the once-per-day flag, so
+// leftovers can't linger because some device already stamped lastRollover for today.
+function isPriorDayDone(v, todayKey){
+  if(!v || v.status!=='done') return false;
+  const ts = v.doneAt || v.finishedAt || v.gateTime || 0;
+  if(!ts) return false;
+  return istDayKey(ts) < todayKey;
+}
+function archiveDone(doneList){
+  if(!doneList.length) return;
+  if(!STATE.archive) STATE.archive=[];
+  STATE.archive=STATE.archive.concat(doneList);
+  const rt=now();
+  const tomb=Object.assign({}, STATE.tombstones||{});
+  doneList.forEach(v=>{ if(v&&v.id!=null) tomb[v.id]=rt; });
+  STATE.tombstones=tomb;
+  STATE.clearedAt=rt;
+}
 function dailyRollover(){
   const todayKey=istDayKey();                    // IST calendar day, same on every device
-  if(STATE.lastRollover===todayKey) return;      // already done today
-  // On first run after load, set baseline without purging (avoid wiping on app open).
-  if(STATE.lastRollover===undefined){ STATE.lastRollover=todayKey; save(); return; }
-  // New IST day detected → move all gated-out vehicles to archive, keep pending ones live.
-  if(!STATE.archive) STATE.archive=[];
+  // Always sweep out any gated-out vehicle from a PRIOR IST day, even if lastRollover
+  // already equals today (covers a device that set today's baseline while yesterday's
+  // released vehicles were still in the list — they'd otherwise never clear).
+  const stale=STATE.vehicles.filter(v=>isPriorDayDone(v, todayKey));
+  if(stale.length){
+    archiveDone(stale);
+    const staleIds=new Set(stale.map(v=>v.id));
+    STATE.vehicles=STATE.vehicles.filter(v=>!staleIds.has(v.id));
+    const rt=now();
+    STATE.vehicles.forEach(v=>{ v.updatedAt=rt; });
+    (STATE.icms||[]).forEach(v=>{ v.updatedAt=rt; });
+  }
+
+  if(STATE.lastRollover===todayKey){
+    if(stale.length){ STATE.lastRollover=todayKey; save(); render();
+      toast('Cleared '+stale.length+' released vehicle'+(stale.length>1?'s':'')+' from a previous day'); }
+    return;
+  }
+  if(STATE.lastRollover===undefined){
+    STATE.lastRollover=todayKey; save();
+    if(stale.length){ render(); toast('Cleared '+stale.length+' released vehicle'+(stale.length>1?'s':'')+' from a previous day'); }
+    return;
+  }
+  // Normal new-IST-day rollover: archive ALL currently gated-out vehicles, keep pending.
   const done=STATE.vehicles.filter(v=>v.status==='done');
   const keep=STATE.vehicles.filter(v=>v.status!=='done');
-  if(done.length){ STATE.archive=STATE.archive.concat(done); }
+  archiveDone(done);
   STATE.vehicles=keep;
   STATE.lastRollover=todayKey;
   const rt=now();
-  STATE.clearedAt=rt;
-  // Tombstone ONLY the archived (done) vehicles; surviving pending vehicles untouched.
-  const tomb=Object.assign({}, STATE.tombstones||{});
-  done.forEach(v=>{ if(v&&v.id!=null) tomb[v.id]=rt; });
-  STATE.tombstones=tomb;
   STATE.vehicles.forEach(v=>{ v.updatedAt=rt; });
   (STATE.icms||[]).forEach(v=>{ v.updatedAt=rt; });
   save(); render();
