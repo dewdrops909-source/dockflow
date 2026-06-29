@@ -889,9 +889,11 @@
     /* the standalone papers-OK single toggle (already-ok state) always lit green */
     .cta-row .c-pap>.papicon.okp{opacity:1;filter:none;
       box-shadow:0 0 0 1px rgba(57,217,138,.55), 0 0 10px 1px rgba(57,217,138,.5);background:rgba(57,217,138,.13)}
-    /* yard card uses a STANDALONE c-zone2 (zone pill, no papers wrapper) — place it on row 4 */
-    .cta-row > .c-zone2{grid-column:1;grid-row:4;justify-self:start}
+    /* yard card uses a STANDALONE c-zone2 (zone pill). Put it on the VENDOR line (row 2),
+       right-aligned — NOT on row 4 where it collided with the dock buttons. */
+    .cta-row > .c-zone2{grid-column:2;grid-row:2;justify-self:end;align-self:center}
     .cta-row > .c-zone2::before{content:""}   /* yard zone pill shows the zone itself, no label */
+    .cta-row > .c-zone2 .zpill{font-size:9px;padding:2px 8px;text-transform:uppercase;letter-spacing:.4px}
     /* zone toggles with ☀️/❄️ symbols — compact */
     .cta-row .segmini{display:inline-flex!important;gap:5px;flex:0 0 auto!important;width:auto!important}
     .cta-row .segmini .segb{flex:0 0 auto!important;width:auto!important;min-height:26px!important;
@@ -1218,6 +1220,8 @@
   .tchip.on{background:rgba(61,165,255,.16);border-color:var(--ambient);color:var(--ambient);font-weight:700}
   .mactions{display:flex;gap:8px;flex-wrap:wrap;padding:14px 16px;border-bottom:1px solid var(--line-soft)}
   .danger-text{color:var(--red)!important}
+  .danger-caret{margin-left:auto;color:var(--red);font-size:14px;flex:0 0 auto;padding-left:8px}
+  .danger-zone.collapsed{display:none}
   .danger-text:hover{box-shadow:inset 0 0 0 1px rgba(255,93,108,.5)!important;background:rgba(255,93,108,.08)!important}
   .mempty{padding:26px 16px;text-align:center;color:var(--dim);font-size:12.5px}
   .uploadbox{padding:16px;background:rgba(0,0,0,.14)}
@@ -1379,7 +1383,7 @@
   // shared "room" — all devices using the same room code see the same data.
   const FIREBASE_ROOM = "gnsc-main";
   // Build tag — bump this every deploy so you can confirm a device loaded the latest build.
-  window.BUILD_VERSION = "v37m";
+  window.BUILD_VERSION = "v41m";
   function firebaseConfigured(){
     return FIREBASE_CONFIG.databaseURL && FIREBASE_CONFIG.databaseURL.indexOf("PASTE_")===-1;
   }
@@ -1707,9 +1711,19 @@
         </div>
       </div>
 
-      <div class="sectiontitle danger-title"><h3>⚠ Danger Zone</h3><div class="ln"></div></div>
-      <div class="danger-zone">
-        <div class="ov-danger">
+      <div class="sectiontitle danger-title" id="danger_toggle" onclick="toggleDangerZone()" style="cursor:pointer">
+        <h3>⚠ Danger Zone</h3><div class="ln"></div>
+        <span class="danger-caret" id="danger_caret">▸</span>
+      </div>
+      <div class="danger-zone collapsed" id="danger_body">
+        <div class="ov-danger-row">
+          <div>
+            <div class="ov-danger-t">Force push to Firebase</div>
+            <div class="ov-danger-s">Overwrites the shared data for all devices with what is on THIS device. Use only if this device is correct and sync is stuck.</div>
+          </div>
+          <button class="btn sm" style="border-color:var(--blue-sky);color:var(--blue-sky)" onclick="forcePushToFirebase()">⬆ Force push</button>
+        </div>
+        <div class="ov-danger-row">
           <div>
             <div class="ov-danger-t">Clear operational data</div>
             <div class="ov-danger-s">Removes all vehicles, ICMs, archive and learning history. Masters (vehicle types, docks, calc times) are kept.</div>
@@ -1967,21 +1981,37 @@ function lsGet(){ try{ return localStorage.getItem(KEY); }catch(e){ return null;
 function lsSet(v){ try{ localStorage.setItem(KEY,v); }catch(e){} }
 
 async function load(){
-  let raw=null;
+  let raw=null, fbOk=false;
   if(initFirebase()){
     // one-time read to seed initial STATE; live listener attached separately
     try{
       const snap=await FB_REF.once('value');
       raw=snap.exists()? JSON.stringify(snap.val()) : null;
-      FB_READY=true;
+      FB_READY=true; fbOk=true;
     }catch(e){ console.error('Firebase read failed, using local',e); FB_READY=false; }
   }
-  if(raw==null) raw=lsGet();           // offline mode, or empty room first run
-  try{ if(raw) STATE=JSON.parse(raw); }catch(e){ /* first run */ }
+  let serverState=null;
+  if(raw!=null){ try{ serverState=JSON.parse(raw); }catch(e){} }
+  let localState=null;
+  const lraw=lsGet();
+  if(lraw){ try{ localState=JSON.parse(lraw); }catch(e){} }
+
+  if(fbOk){
+    // Firebase reachable → server is authoritative. MERGE local into it so we keep any
+    // record the server lacks but never lose the server's newer records (vehicles added
+    // on other devices). Stops a reopened tab from treating stale localStorage as truth.
+    if(serverState && localState){ STATE=mergeStates(localState, serverState); }
+    else { STATE = serverState || localState || {}; }
+  } else {
+    STATE = localState || {};
+  }
   normalizeState();
   const m=STATE.masters;
   const empty=!m || ((!m.sizes||!m.sizes.length) && (!m.docks||!m.docks.length));
   if(empty){ STATE.masters=JSON.parse(JSON.stringify(DEFAULT_MASTERS)); mastersSeeded=true; }
+  // Baseline change-tracker to what we loaded, so the first save() doesn't re-stamp every
+  // loaded record as a local edit.
+  rememberSaved();
 }
 
 // Firebase does not store empty arrays — they come back as undefined. After any
@@ -2025,6 +2055,7 @@ function attachLiveSync(){
       lastSig=sigOf(snapshotState());
       render(); renderSyncBadge();
       FB_APPLYING=false;
+      if(pending){ pending=false; save(); }   // flush a save queued during apply
       checkRemoteLogout();
       // NOTE: no automatic re-push here. Each device broadcasts its OWN changes via its
       // own save(); an auto re-push after every merge caused an infinite ping-pong between
@@ -2131,20 +2162,75 @@ function unionLog(a,b){
 }
 // =================================================================
 
+// Collapse/expand the Danger Zone (collapsed by default to keep destructive actions tucked away).
+function toggleDangerZone(){
+  const body=document.getElementById('danger_body');
+  const caret=document.getElementById('danger_caret');
+  if(!body) return;
+  const collapsed=body.classList.toggle('collapsed');
+  if(caret) caret.textContent=collapsed?'▸':'▾';
+}
+
+// FORCE PUSH: overwrite the shared Firebase state with THIS device's current state.
+// Use when this device is known-correct but sync seems stuck or a peer pushed bad data.
+// Bypasses merge — it's a deliberate "my copy wins" admin action, hence the confirm.
+async function forcePushToFirebase(){
+  if(!await askConfirm('Force PUSH this device\u2019s data to Firebase?\nThis overwrites the shared state for ALL devices with what is currently on THIS device. Use only if this device is correct and sync is stuck.','Force push',true)) return;
+  if(!(FB_READY && FB_REF)){ toast('Not connected to Firebase — cannot force push'); return; }
+  try{
+    stampChanges();
+    const snapshot=snapshotState();
+    lastSig=sigOf(snapshot);
+    rememberSaved();
+    await FB_REF.set(JSON.parse(snapshot));
+    lsSet(snapshot);
+    toast('Force pushed this device\u2019s data to all devices');
+  }catch(e){
+    console.error('force push failed',e);
+    toast('Force push failed — check connection');
+  }
+}
+
 async function save(){
-  if(FB_APPLYING) return;              // don't echo a change we just received
+  if(FB_APPLYING){ pending=true; return; }   // a sync is being applied; queue this save
   if(saving){pending=true;return;}
   saving=true;
   stampChanges();                      // mark changed vehicles/icms with a fresh updatedAt
   const snapshot=snapshotState();
-  lastSig=sigOf(snapshot);             // mark as our own write so the listener ignores the echo
   rememberSaved();                     // remember what we just persisted (for next diff)
   try{
-    if(FB_READY && FB_REF){ await FB_REF.set(JSON.parse(snapshot)); }
-    lsSet(snapshot);                   // always keep a local copy too
+    if(FB_READY && FB_REF){
+      // Write via a MERGE transaction, not a blind set(). A blind set() from a device
+      // whose STATE is missing records another device just added would wipe those newer
+      // records — the "old data keeps coming back" bug. Merging makes every write additive
+      // and newest-wins, so a stale writer can never delete fresh vehicles.
+      const localState=JSON.parse(snapshot);
+      const res=await FB_REF.transaction(server=>{
+        if(server==null) return localState;
+        try{ return mergeStates(localState, server); }
+        catch(_){ return localState; }
+      });
+      try{
+        const committed = res && res.snapshot && res.snapshot.val ? res.snapshot.val() : null;
+        if(committed){
+          FB_APPLYING=true;
+          STATE=mergeStates(STATE, committed);
+          normalizeState(); rememberSaved();
+          lastSig=sigOf(snapshotState());
+          FB_APPLYING=false;
+          lsSet(snapshotState());
+        } else {
+          lastSig=sigOf(snapshot); lsSet(snapshot);
+        }
+      }catch(_){ lastSig=sigOf(snapshot); lsSet(snapshot); }
+    } else {
+      lastSig=sigOf(snapshot);
+      lsSet(snapshot);
+    }
     storageWarned=false;
   }catch(e){
     console.error('save failed',e);
+    lastSig=sigOf(snapshot);
     lsSet(snapshot);                   // at least persist locally
     if(!storageWarned){ storageWarned=true; toast('Online sync unavailable — saved on this device only'); }
   }
@@ -2762,9 +2848,15 @@ function finishUnload(id){
 
 // ---- security EXECUTES the physical move ----
 async function moveToYard(id){
-  const v=STATE.vehicles.find(x=>x.id===id); if(!v||v.status!=='call_alert')return;
+  let v=STATE.vehicles.find(x=>x.id===id); if(!v||v.status!=='call_alert')return;
+  const veh=v.veh, zone=v.zone;   // capture labels for prompts (stable across awaits)
   // Step 1 — Yes/No: did the vehicle actually move to the yard?
-  const moved=await askConfirm('Has '+v.veh+' moved into the '+v.zone+' yard?','Yes — moved',false,'No');
+  const moved=await askConfirm('Has '+veh+' moved into the '+zone+' yard?','Yes — moved',false,'No');
+  // A sync may have REPLACED STATE while the modal was open (Firebase listener does
+  // STATE=mergeStates(...)). Re-resolve the LIVE record before mutating, else the change
+  // lands on a discarded object and never reaches Firebase.
+  v=STATE.vehicles.find(x=>x.id===id);
+  if(!v||v.status!=='call_alert'){ render(); return; }
   if(moved){
     v.status='yard'; v.yardAt=now(); v.alertUntil=0;
     v.papers = v.papers==='hold' ? 'ok' : v.papers;   // clear any prior not-moved hold
@@ -2772,9 +2864,11 @@ async function moveToYard(id){
     save(); toast(v.veh+' → yard'); render(); return;
   }
   // Step 2 — No: why not?
-  const reason=await askChoice('Why has '+v.veh+' not moved to the yard?',
+  const reason=await askChoice('Why has '+veh+' not moved to the yard?',
     ['Driver not available','Vehicle not available']);
   if(reason==null) return;   // cancelled — leave as-is (still call_alert)
+  v=STATE.vehicles.find(x=>x.id===id);   // re-resolve after second modal
+  if(!v||v.status!=='call_alert'){ render(); return; }
 
   if(reason==='Driver not available'){
     // On hold, but KEEPS its queue position (FIFO time untouched). ETA keeps climbing
@@ -2799,8 +2893,11 @@ async function moveToYard(id){
 
 // Driver (who was previously unavailable) has now arrived → move the vehicle to yard.
 async function driverArrived(id){
-  const v=STATE.vehicles.find(x=>x.id===id); if(!v) return;
-  if(!await askConfirm('Driver for '+v.veh+' has arrived — move into the '+v.zone+' yard?','Yes — move to yard',false,'No')) return;
+  let v=STATE.vehicles.find(x=>x.id===id); if(!v) return;
+  const veh=v.veh, zone=v.zone;
+  if(!await askConfirm('Driver for '+veh+' has arrived — move into the '+zone+' yard?','Yes — move to yard',false,'No')) return;
+  v=STATE.vehicles.find(x=>x.id===id);   // re-resolve live record after the modal
+  if(!v) return;
   v.status='yard'; v.yardAt=now(); v.alertUntil=0;
   v.papers = v.papers==='hold' ? 'ok' : v.papers;   // clear the driver-not-available hold
   v.holdReason=''; v.notMoved=null;
@@ -2857,6 +2954,12 @@ async function resetMasters(){
    RENDER
    ============================================================ */
 function render(){
+  // Preserve scroll position across the re-render. Most lists (incl. Call to Action queue)
+  // scroll with the WINDOW; the All Vehicles list (#todaylist) scrolls inside its own box.
+  // Capture both, rebuild, then restore so marking zone/papers doesn't snap to the top.
+  const _sx=window.scrollX, _sy=window.scrollY;
+  const _tl=document.getElementById('todaylist');
+  const _tlTop=_tl?_tl.scrollTop:0;
   renderSecurity();
   renderWarehouse();
   renderBoard();
@@ -2864,6 +2967,11 @@ function render(){
   renderMasters();
   refreshVendorList();
   populateSizeDropdown();
+  requestAnimationFrame(()=>{
+    window.scrollTo(_sx, _sy);
+    const tl=document.getElementById('todaylist');
+    if(tl) tl.scrollTop=_tlTop;
+  });
 }
 
 function populateSizeDropdown(){
