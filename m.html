@@ -1249,6 +1249,12 @@
   .cta-head .c-veh,.cta-row .c-veh{flex:0 0 120px}
   .cta-head .c-ven,.cta-row .c-ven{flex:0 0 130px;min-width:0}
   .cta-head .c-sz,.cta-row .c-sz{flex:0 0 80px}
+  .c-sz-edit{cursor:pointer;background:none;border:1px dashed rgba(120,160,210,.35);
+    border-radius:6px;color:inherit;font:inherit;padding:2px 8px;white-space:nowrap}
+  .c-sz-edit:hover{border-color:var(--blue-sky);color:var(--blue-sky)}
+  .c-ven-edit{cursor:pointer}
+  .c-ven-edit:active{opacity:.7}
+  .ld-admin{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px solid rgba(120,150,190,.15)}
   .c-pos{flex:0 0 28px;text-align:center;font:700 12.5px var(--mono);color:var(--dim)}
   .c-pos.next{color:var(--amber)}
   .c-status{flex:1 1 auto;min-width:120px;display:flex;flex-direction:column;gap:3px;overflow:hidden}
@@ -1283,6 +1289,7 @@
   .ftag.fveg{background:rgba(57,217,138,.16);color:var(--green);box-shadow:inset 0 0 0 1px rgba(57,217,138,.4)}
   .ftag.ficm{background:rgba(111,140,255,.16);color:var(--violet);box-shadow:inset 0 0 0 1px rgba(111,140,255,.4)}
   .ftag.foft{background:rgba(255,176,32,.16);color:var(--amber);box-shadow:inset 0 0 0 1px rgba(255,176,32,.5);cursor:help}
+  .ftag.fbreak{background:rgba(255,93,108,.18);color:var(--red);box-shadow:inset 0 0 0 1px rgba(255,93,108,.55);cursor:help}
   .segmini{display:inline-flex;background:var(--panel3);border:1px solid var(--line);border-radius:8px;padding:2px;gap:2px}
   .segb{font:700 11px var(--sans);border:0;background:transparent;color:var(--muted);
     padding:5px 9px;border-radius:6px;cursor:pointer;transition:.12s;white-space:nowrap}
@@ -1725,6 +1732,13 @@
         </div>
         <div class="ov-danger-row">
           <div>
+            <div class="ov-danger-t">Clear learning data only</div>
+            <div class="ov-danger-s">Wipes just the Intelligence averages / unload-time samples. Vehicles, ICMs and the archive are kept. Use to reset stats after trial-run or bad test data.</div>
+          </div>
+          <button class="btn danger sm" onclick="clearLearningData()">Clear learning</button>
+        </div>
+        <div class="ov-danger-row">
+          <div>
             <div class="ov-danger-t">Clear operational data</div>
             <div class="ov-danger-s">Removes all vehicles, ICMs, archive and learning history. Masters (vehicle types, docks, calc times) are kept.</div>
           </div>
@@ -2026,6 +2040,7 @@ function normalizeState(){
   if(!Array.isArray(STATE.alerts))   STATE.alerts=[];
   if(typeof STATE.seq!=='number')    STATE.seq=1;
   if(typeof STATE.icmSeq!=='number') STATE.icmSeq=1;
+  if(typeof STATE.historyClearedAt!=='number') STATE.historyClearedAt=0;
   // Migration backfill: any record without a per-record timestamp gets a baseline equal
   // to the current clear boundary (or 1 if no clear). This makes grandfathered records
   // SURVIVE the current clearedAt filter, while any genuine future edit (stamped via the
@@ -2141,9 +2156,16 @@ function mergeStates(local, incoming){
   // the alert banner and the actionable vehicle row drift apart). Dismissal must win:
   // if EITHER copy is seen, the merged alert is seen, so a dismiss propagates everywhere.
   merged.alerts   = mergeAlerts(local.alerts, incoming.alerts);
-  // history & archive are append-only logs → union by a cheap key, keep all
-  merged.history  = unionLog(local.history, incoming.history);
-  merged.archive  = unionLog(local.archive, incoming.archive);
+  // history & archive are append-only logs → union by a cheap key. But "Delete all data"
+  // must actually stick: a plain union would let any peer still holding the old samples
+  // re-add them on the next merge (why learning data came back after a clear). We honor a
+  // historyClearedAt watermark (max across devices) and keep only entries recorded AFTER
+  // it, so a clear propagates while genuinely new unloads survive.
+  const histClear = Math.max(local.historyClearedAt||0, incoming.historyClearedAt||0);
+  merged.historyClearedAt = histClear;
+  const histTs = e => (e && (e.finishedAt || e.doneAt || e.placedAt || e.gateTime || 0)) || 0;
+  merged.history  = unionLog(local.history, incoming.history).filter(e=>histTs(e) > histClear);
+  merged.archive  = unionLog(local.archive, incoming.archive).filter(e=>histTs(e) > histClear);
   // sequence counters: take the max so ids never collide
   merged.seq    = Math.max(local.seq||1, incoming.seq||1);
   merged.icmSeq = Math.max(local.icmSeq||1, incoming.icmSeq||1);
@@ -2971,9 +2993,23 @@ async function resetData(){
   const tomb=Object.assign({}, STATE.tombstones||{});
   (STATE.vehicles||[]).forEach(v=>{ if(v&&v.id!=null) tomb[v.id]=ct; });
   (STATE.icms||[]).forEach(v=>{ if(v&&v.id!=null) tomb[v.id]=ct; });
-  STATE={vehicles:[],history:[],seq:1,icms:[],icmSeq:1,archive:[],masters:keepMasters,lastRollover:STATE.lastRollover,clearedAt:ct,tombstones:tomb};
+  STATE={vehicles:[],history:[],seq:1,icms:[],icmSeq:1,archive:[],masters:keepMasters,lastRollover:STATE.lastRollover,clearedAt:ct,historyClearedAt:ct,tombstones:tomb};
   save(); render();
   toast('All vehicle data cleared — masters kept');
+}
+// Clear ONLY the learning/averages history (the Intelligence tab samples). Operational
+// vehicles, ICMs and current archive are untouched. Uses the historyClearedAt watermark
+// so the wipe sticks across devices and a stale peer can't re-add the old samples.
+async function clearLearningData(){
+  const n=(STATE.history||[]).length;
+  if(!await askConfirm('Clear all learning data ('+n+' unload sample'+(n===1?'':'s')+')?\nThis resets the Intelligence averages for everyone. Vehicles, ICMs and the archive are kept.\nCannot be undone.','Clear learning data',true)) return;
+  const ct=now();
+  STATE.history=[];
+  // Bump the watermark just past now so existing samples (recorded before ct) are filtered
+  // out on merge, while any unload completed after this still records normally.
+  STATE.historyClearedAt=Math.max(STATE.historyClearedAt||0, ct);
+  save(); render();
+  toast('Learning data cleared — '+n+' sample'+(n===1?'':'s')+' removed');
 }
 async function resetMasters(){
   if(!await askConfirm('Clear ALL masters (vehicle types, docks, calc times) and start fresh?\nVehicles and history are kept.','Clear masters',true))return;
@@ -3170,6 +3206,7 @@ function zonePill(z){
 // Intrinsic cargo flags, carried on the vehicle through every stage.
 function cargoTag(v){
   let out='';
+  if(v.breakdown) out+='<span class="ftag fbreak" title="Breakdown — '+esc(v.breakdownReason||'')+'">⚠ B/D</span> ';
   if(v.veggies) out+='<span class="ftag fveg">VEG</span> ';
   if(v.icm) out+='<span class="ftag ficm">ICM&#9656;</span> ';
   if(v.fifoOverride) out+='<span class="ftag foft" title="Out of FIFO turn — '+esc(v.fifoOverride.reason||'')+'">OFT</span> ';
@@ -3622,8 +3659,8 @@ function ctaYardRow(v,plan){
   }
   return `<div class="vrow cta-row${agedCls(v)}">
     <span class="c-veh mono" title="${esc(v.veh)}">${esc(v.veh)} ${cargoTag(v)}${agedBadge(v)}<button class="drv-btn${v.driver?'':' drv-empty'}" data-drv="${esc(v.driver||'')}" title="${v.driver?'Show driver number':'No number on record'}" onclick="toggleDriver(this)">&#128222;</button><span class="drv-num" hidden>${v.driver?esc(v.driver):'No number on record'}</span></span>
-    <span class="c-ven" data-size="${esc(v.size||'—')}" title="${esc(v.vendor)}">${esc(v.vendor)}${v.icm&&v.dest?' · '+esc(v.dest):''}</span>
-    <span class="c-sz">${esc(v.size)}</span>
+    <span class="c-ven c-ven-edit" data-cta="editSize" data-id="${v.id}" data-size="${esc(v.size||'—')}" title="Tap to correct size (${esc(v.vendor)})">${esc(v.vendor)}${v.icm&&v.dest?' · '+esc(v.dest):''}</span>
+    <button class="c-sz c-sz-edit" data-cta="editSize" data-id="${v.id}" title="Tap to correct vehicle size">${esc(v.size)} ✎</button>
     <span class="c-zone2"><span class="zpill ${zcls}">${v.zone}</span></span>
     <span class="c-docks">${docks}</span>
   </div>`;
@@ -3678,8 +3715,8 @@ function ctaRow(v,i){
   return `<div class="vrow cta-row${ready?' is-ready':''}${agedCls(v)}">
     <span class="c-pos ${i===0?'next':''}">${i+1}</span>
     <span class="c-veh mono" title="${esc(v.veh)}${v.driver?' · '+esc(v.driver):''}"><span class="pos-inline${i===0?' next':''}">#${i+1}</span> ${esc(v.veh)}${flagInline}${agedBadge(v,true)}<button class="drv-btn${v.driver?'':' drv-empty'}" data-drv="${esc(v.driver||'')}" title="${v.driver?'Show driver number':'No number on record'}" onclick="toggleDriver(this)">&#128222;</button><span class="drv-num" hidden>${v.driver?esc(v.driver):'No number on record'}</span></span>
-    <span class="c-ven" data-size="${esc(v.size||'—')}" title="${esc(v.vendor)}">${esc(v.vendor)}${v.icm&&v.dest?' · '+esc(v.dest):''}</span>
-    <span class="c-sz">${esc(v.size||'—')}</span>
+    <span class="c-ven c-ven-edit" data-cta="editSize" data-id="${v.id}" data-size="${esc(v.size||'—')}" title="Tap to correct size (${esc(v.vendor)})">${esc(v.vendor)}${v.icm&&v.dest?' · '+esc(v.dest):''}</span>
+    <button class="c-sz c-sz-edit" data-cta="editSize" data-id="${v.id}" title="Tap to correct vehicle size">${esc(v.size||'—')} ✎</button>
     <span class="c-status">${statusHTML}</span>
     <span class="cta-controls"><span class="c-zone2">${zoneHTML}</span><span class="c-pap">${pap}</span></span>
     <span class="c-send">${send}</span>
@@ -3698,6 +3735,53 @@ function ctaHoldRow(v){
 function ctaSetZone(id,zone){
   const v=STATE.vehicles.find(x=>x.id===id); if(!v||v.zoneLocked) return;
   v.zone=zone; save(); render();
+}
+// Warehouse correction: Security sometimes logs the wrong vehicle size at the gate.
+// Allow changing it any time BEFORE the vehicle is placed on a dock (waiting / called /
+// in yard). Once on dock or beyond, size is locked (it drove the dock-fit decision).
+async function editVehicleSize(id){
+  let v=STATE.vehicles.find(x=>x.id===id); if(!v) return;
+  if(['docked','awaiting','done'].includes(v.status)){
+    toast('Size is locked once the vehicle is on a dock'); return;
+  }
+  const sizes=sizeList();
+  if(!sizes.length){ toast('No vehicle sizes defined in Masters'); return; }
+  const pick=await askChoice('Correct vehicle size for '+v.veh+'\n(current: '+(v.size||'—')+')', sizes);
+  if(pick==null) return;                          // cancelled
+  v=STATE.vehicles.find(x=>x.id===id); if(!v) return;   // re-resolve after the modal
+  if(['docked','awaiting','done'].includes(v.status)){ render(); return; }
+  if(pick===v.size){ render(); return; }
+  const old=v.size; v.size=pick;
+  save(); render();
+  toast(v.veh+' size corrected: '+(old||'—')+' → '+pick);
+}
+// Admin: flag a vehicle as broken down (any stage). It stays in the system with a clear
+// BREAKDOWN marker; toggling again clears the flag. Does not change queue position.
+async function markBreakdown(id){
+  let v=STATE.vehicles.find(x=>x.id===id); if(!v) return;
+  if(v.breakdown){
+    if(!await askConfirm('Clear the breakdown flag on '+v.veh+'?','Clear breakdown',false)) return;
+    v=STATE.vehicles.find(x=>x.id===id); if(!v) return;
+    v.breakdown=false; v.breakdownReason='';
+    save(); render(); toast(v.veh+' — breakdown cleared'); return;
+  }
+  const reason=await askReason('Mark '+v.veh+' as broken down?\nThis flags it for the team; it stays in the list until you delete or gate it out.','e.g. engine failure, tyre burst, awaiting mechanic…');
+  if(reason==null) return;                       // cancelled
+  v=STATE.vehicles.find(x=>x.id===id); if(!v) return;   // re-resolve after modal
+  v.breakdown=true; v.breakdownReason=(reason||'').trim()||'Vehicle breakdown';
+  save(); render(); toast(v.veh+' marked as broken down');
+}
+// Admin: permanently remove a vehicle from the system. Tombstones the id so a stale
+// device cannot resurrect it via the merge. Use for test/erroneous entries.
+async function deleteVehicle(id){
+  let v=STATE.vehicles.find(x=>x.id===id); if(!v) return;
+  const label=v.veh;
+  if(!await askConfirm('Delete '+label+' permanently?\nThis removes it for everyone and cannot be undone.\n(For vehicles that physically left without unloading, gate them out instead so they stay in the record.)','Delete vehicle',true)) return;
+  const ct=now();
+  STATE.vehicles=STATE.vehicles.filter(x=>x.id!==id);
+  const tomb=Object.assign({}, STATE.tombstones||{}); tomb[id]=ct; STATE.tombstones=tomb;
+  (STATE.icms||[]).forEach(m=>{ if(m && m.vehId===id){ m.vehId=null; } });
+  save(); render(); toast(label+' deleted');
 }
 function ctaPaperOk(id){
   const v=STATE.vehicles.find(x=>x.id===id); if(!v) return;
@@ -3758,6 +3842,7 @@ function initCTADelegation(){
       case 'resolve':     ctaResolve(id); break;
       case 'send':        ctaSend(id); break;
       case 'assign':      assignDock(id,t.dataset.dock); break;
+      case 'editSize':    editVehicleSize(id); break;
       case 'release':     finishUnload(id); break;
     }
    }catch(err){ toast('Error: '+err.message); console.error(err); }
@@ -4321,6 +4406,11 @@ function renderToday(){
       ${grnAction}
       ${v.fifoOverride?`<div class="ld-fifo"><span class="ld-fifo-tag">OFT</span> Sent out of FIFO turn${v.fifoOverride.ahead?' (ahead of '+esc(v.fifoOverride.ahead)+')':''} — <em>${esc(v.fifoOverride.reason||'no reason')}</em></div>`:''}
       ${v.leftWithoutUnloading?`<div class="ld-fifo" style="color:var(--red)"><span class="ld-fifo-tag" style="background:var(--red);color:#fff">LEFT</span> <em>${esc(v.remarks||'Left without unloading — Driver left')}</em></div>`:''}
+      ${v.breakdown?`<div class="ld-fifo" style="color:var(--amber)"><span class="ld-fifo-tag" style="background:var(--amber);color:#10151c">BREAKDOWN</span> <em>${esc(v.breakdownReason||'Vehicle breakdown')}</em></div>`:''}
+      <div class="ld-admin">
+        ${v.status!=='done'?`<button class="btn ghost sm" data-admin="breakdown" data-id="${v.id}">${v.breakdown?'Clear breakdown':'⚠ Mark breakdown'}</button>`:''}
+        <button class="btn ghost sm danger-text" data-admin="delete" data-id="${v.id}">🗑 Delete vehicle</button>
+      </div>
     </div>`;
   };
 
@@ -4375,6 +4465,14 @@ function renderToday(){
 function wireRowExpand(box){
   if(box._expWired) return; box._expWired=true;
   box.addEventListener('click',e=>{
+    const adminBtn=e.target.closest('[data-admin]');
+    if(adminBtn){
+      e.stopPropagation();
+      const act=adminBtn.getAttribute('data-admin'), aid=adminBtn.getAttribute('data-id');
+      if(act==='breakdown') markBreakdown(aid);
+      else if(act==='delete') deleteVehicle(aid);
+      return;
+    }
     if(e.target.closest('[data-grn]')) return;   // GRN buttons handled separately
     const row=e.target.closest('[data-veh-row]'); if(!row) return;
     const id=row.getAttribute('data-veh-row');
