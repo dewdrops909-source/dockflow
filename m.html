@@ -37,17 +37,33 @@
   .login-overlay{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;
     padding:24px;background:var(--bg);}
   .login-overlay[hidden]{display:none}
-  .login-card{width:100%;max-width:360px;background:var(--panel);
-    border:1px solid var(--line);border-radius:18px;padding:30px 24px;box-shadow:0 20px 60px rgba(0,0,0,.5);text-align:center}
-  .login-logo{width:52px;height:52px;margin:0 auto 14px;border-radius:13px;display:flex;align-items:center;justify-content:center;
-    font:800 20px var(--mono);color:#04241a;background:linear-gradient(180deg,#6fe3ff,#34a0e4);box-shadow:0 0 18px rgba(60,160,228,.5)}
-  .login-card h2{margin:0 0 4px;font-size:19px;color:var(--ink)}
-  .login-sub{margin:0 0 22px;font-size:13px;color:var(--muted)}
+  .login-card{width:100%;max-width:380px;background:var(--panel);
+    border:1px solid var(--line);border-radius:18px;padding:34px 28px;box-shadow:0 20px 60px rgba(0,0,0,.5);text-align:center}
+  .login-field{text-align:left;margin-bottom:14px}
+  .login-field label{display:block;font:700 11px var(--mono);letter-spacing:.4px;text-transform:uppercase;color:var(--blue-sky);margin-bottom:6px}
+  .login-field input{width:100%;box-sizing:border-box;padding:12px 13px;font-size:15px;color:var(--ink);
+    background:var(--panel2);border:1px solid var(--line);border-radius:10px;outline:none}
+  .login-field input:focus{border-color:var(--blue-sky);box-shadow:0 0 0 3px rgba(47,127,255,.18)}
+  .login-err{color:var(--red);font-size:12.5px;font-weight:600;margin-bottom:12px;text-align:left}
+  .login-err[hidden]{display:none}
+  .logout-btn{background:rgba(255,93,108,.12);border:1px solid rgba(255,93,108,.4);color:#ff8a99;
+    font:700 12px var(--sans);padding:7px 13px;border-radius:9px;cursor:pointer;white-space:nowrap;margin-left:10px}
+  .logout-btn:hover{background:rgba(255,93,108,.2)}
+  .logout-btn[hidden]{display:none}
+  .user-badge{display:inline-flex;align-items:center;gap:5px;font:700 11px var(--mono);letter-spacing:.4px;
+    text-transform:uppercase;color:var(--blue-sky);background:rgba(47,127,255,.12);
+    border:1px solid rgba(94,194,255,.35);border-radius:8px;padding:5px 10px;white-space:nowrap;margin-left:10px}
+  .user-badge[hidden]{display:none}
+  .user-badge::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green)}
+  body:not(.role-admin) #wh_subtabs button[data-s="masters"],
+  body:not(.role-admin) #wh_subtabs button[data-s="summary"],
+  body:not(.role-admin) #wh_subtabs button[data-s="intel"]{display:none!important}
+  body.role-security #roles{display:none!important}
   /* ---- minimal neon wordmark (blue, app theme; one calm glow, no flicker) ---- */
-  .neon-wrap{margin-bottom:26px}
-  .neon-logo{position:relative;width:54px;height:54px;margin:0 auto 16px;border-radius:13px;
+  .neon-wrap{margin-bottom:28px}
+  .neon-logo{position:relative;width:58px;height:58px;margin:0 auto 16px;border-radius:14px;
     display:flex;align-items:center;justify-content:center;
-    font:800 23px var(--mono);color:#eaf6ff;letter-spacing:1px;
+    font:800 25px var(--mono);color:#eaf6ff;letter-spacing:1px;
     background:rgba(47,127,255,.10);
     box-shadow:0 0 12px rgba(94,194,255,.35)}
   /* rotating light that travels around the border */
@@ -58,38 +74,15 @@
     -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
     -webkit-mask-composite:xor;mask-composite:exclude;
     animation:neonTrace 3.4s linear infinite}
-  /* a soft static base ring under the moving light, so the edge never looks bare */
   .neon-logo::after{content:"";position:absolute;inset:0;border-radius:inherit;
     border:1px solid rgba(94,194,255,.22);pointer-events:none}
   @property --ang{syntax:'<angle>';inherits:false;initial-value:0deg}
   @keyframes neonTrace{to{--ang:360deg}}
-  .neon-title{font:800 25px var(--sans);letter-spacing:1px;line-height:1.1}
+  .neon-title{font:800 28px var(--sans);letter-spacing:1px;line-height:1.1}
   .neon-gnsc{color:#eaf6ff;text-shadow:0 0 10px rgba(94,194,255,.65)}
   .neon-flow{color:var(--blue-sky);text-shadow:0 0 10px rgba(47,127,255,.55)}
   .neon-tag{margin-top:9px;font:700 9px var(--mono);letter-spacing:2.5px;color:var(--dim)}
   @media(prefers-reduced-motion:reduce){ .neon-logo::before{animation:none;--ang:330deg} }
-  .login-field{text-align:left;margin-bottom:14px}
-  .login-field label{display:block;font:700 11px var(--mono);letter-spacing:.4px;text-transform:uppercase;color:var(--blue-sky);margin-bottom:6px}
-  .login-field input{width:100%;box-sizing:border-box;padding:12px 13px;font-size:15px;color:var(--ink);
-    background:var(--panel2);border:1px solid var(--line);border-radius:10px;outline:none}
-  .login-field input:focus{border-color:var(--blue-sky);box-shadow:0 0 0 3px rgba(47,127,255,.18)}
-  .login-err{color:var(--red);font-size:12.5px;font-weight:600;margin-bottom:12px;text-align:left}
-  .login-err[hidden]{display:none}
-  .logout-btn{background:rgba(255,93,108,.12);border:1px solid rgba(255,93,108,.4);color:#ff8a99;
-    font:700 12px var(--sans);padding:7px 13px;border-radius:9px;cursor:pointer;white-space:nowrap}
-  .logout-btn:hover{background:rgba(255,93,108,.2)}
-  .logout-btn[hidden]{display:none}
-  .user-badge{display:inline-flex;align-items:center;gap:5px;font:700 11px var(--mono);letter-spacing:.4px;
-    text-transform:uppercase;color:var(--blue-sky);background:rgba(47,127,255,.12);
-    border:1px solid rgba(94,194,255,.35);border-radius:8px;padding:5px 10px;white-space:nowrap}
-  .user-badge[hidden]{display:none}
-  .user-badge::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green)}
-  /* Masters / Summary / Intelligence are admin-only — hidden for warehouse & security */
-  body:not(.role-admin) #wh_subtabs button[data-s="masters"],
-  body:not(.role-admin) #wh_subtabs button[data-s="summary"],
-  body:not(.role-admin) #wh_subtabs button[data-s="intel"]{display:none!important}
-  /* security role: hide the role toggle so they cannot switch to Warehouse */
-  body.role-security #roles{display:none!important}
   body{
     background:
       radial-gradient(1200px 600px at 80% -10%, rgba(47,127,255,.22) 0%, transparent 62%),
@@ -360,10 +353,16 @@
   /* Danger Zone — clearly-marked red container for destructive admin actions */
   .danger-title h3{color:var(--red)}
   .danger-zone{border:1px solid rgba(255,93,108,.45);border-radius:12px;
-    background:rgba(255,93,108,.05);padding:6px 14px;margin-top:4px}
-  .danger-zone .ov-danger,.danger-zone .ov-danger-row{margin-top:14px;border:none;background:transparent;padding:10px 0}
+    background:rgba(255,93,108,.05);padding:6px 18px;margin-top:4px}
+  .danger-zone .ov-danger{margin-top:14px;border:none;background:transparent;padding:12px 0}
   .danger-zone .ov-danger:first-child{margin-top:6px}
-  .danger-zone .ov-danger+.ov-danger-row{border-top:1px solid rgba(255,93,108,.2)}
+  .danger-zone .ov-danger+.ov-danger{border-top:1px solid rgba(255,93,108,.2)}
+  .ov-diag{margin-bottom:6px;padding:12px 14px;border:1px solid rgba(94,194,255,.28);border-radius:10px;background:rgba(47,127,255,.05)}
+  .ov-diag-t{font:700 11px var(--mono);letter-spacing:.6px;text-transform:uppercase;color:var(--blue-sky);margin-bottom:8px}
+  .ov-diag-row{display:flex;justify-content:space-between;gap:10px;padding:4px 0;border-bottom:1px solid rgba(120,150,190,.1);font-size:12.5px}
+  .ov-diag-row:last-of-type{border-bottom:none}
+  .ov-diag-k{color:var(--muted);flex:0 0 auto}
+  .ov-diag-v{color:var(--ink);text-align:right;font-family:var(--mono);font-size:11.5px}
   /* >24h on site — escalating flag across all views */
   .aged{box-shadow:inset 0 0 0 1.5px rgba(255,176,32,.8)!important;border-radius:8px}
   .aged-2{box-shadow:inset 0 0 0 1.5px rgba(255,127,80,.85)!important}
@@ -554,88 +553,50 @@
      │   Security        → triage; Move-to-Yard on the right of the alert row   │
      └────────────────────────────────────────────────────────────────────────┘
      ============================================================================ */
-  /* MOBILE-ONLY FILE: this block applies at ALL widths (was max-width:760px).
-     There is no desktop layout in this file to fight — mobile is the only view. */
-  @media(max-width:99999px){
-    /* ---- mobile tokens (tightened global pass — denser, less zoomed) ---- */
+  @media(max-width:760px){
+    /* ---- mobile tokens ---- */
     :root{
-      --m-pad:10px; --m-radius:10px;
-      --m-anchor:12.5px; /* → scale anchor */
-      --m-sub:11px;      /* → scale body */
-      --m-out:11px;      /* → scale body */
-      --m-label:9.5px;   /* → scale meta */
-      --m-tap:38px;      /* min tap target */
-      /* ---- unified TYPE SCALE — every text size snaps to one of these five ---- */
-      --fs-stat:17px;    /* big stat-card numbers ONLY */
-      --fs-anchor:12.5px;/* primary anchor: plate, vendor name */
-      --fs-body:11px;    /* secondary: subtitle, stage, values */
-      --fs-meta:9.5px;   /* labels, meta, timestamps */
-      --fs-micro:8px;    /* micro-labels, units */
+      --m-pad:13px; --m-radius:11px;
+      --m-anchor:15px;   /* plate */
+      --m-sub:12px;      /* vendor subtitle */
+      --m-out:12.5px;    /* the critical output on the right */
+      --m-label:9.5px;   /* mono micro-label */
+      --m-tap:42px;      /* min tap target */
     }
 
     /* ---------- shell ---------- */
-    main{max-width:480px;margin:0 auto;padding:10px;font-size:14px}   /* phone-width frame; base scale */
-    header{max-width:480px;margin:0 auto}
-    header{padding:9px 12px;gap:8px}
-    .brand{gap:9px}
-    .brand h1{font-size:12.5px;line-height:1.1}
-    .brand p{font-size:8px;letter-spacing:.4px;margin-top:0}
-    .logo{width:31px;height:31px;font-size:12.5px;border-radius:8px}
-    .roles{order:3;width:100%;justify-content:space-between;margin-top:0;padding:3px;border-radius:9px}
-    .roles button{flex:1;padding:6px 8px;font-size:11px}
-    /* badge + logout ride the brand line, hard right, vertically centered with the logo */
-    .hdr-account{display:flex!important;align-items:center;gap:5px;flex:none;align-self:center;margin-left:auto;order:2}
-    .brand{margin-right:0;flex:1 1 auto;min-width:0}
-    .brand h1{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .user-badge{padding:3px 6px!important;font-size:8px!important;letter-spacing:.2px;gap:3px}
-    .user-badge::before{width:5px;height:5px}
-    .logout-btn{padding:3px 7px!important;font-size:9.5px!important;margin-left:0}
+    main{padding:12px}
+    header{padding:13px 14px}
+    .brand h1{font-size:15px;line-height:1.15}
+    .brand p{font-size:8.5px;letter-spacing:.5px}
+    .logo{width:36px;height:36px;font-size:16px}
+    .roles{order:3;width:100%;justify-content:space-between;margin-top:2px}
+    .roles button{flex:1;padding:9px 8px;font-size:12px}
     .clock,.qmeta{display:none}
 
     /* ---------- stat cards ---------- */
-    /* 3 across so 5-6 stat cards fit in TWO rows, not three — keeps the top deck tight */
-    .stats{grid-template-columns:repeat(3,1fr);gap:6px}
-    .stat{padding:7px 8px}
-    .stat .k{font-size:8px;letter-spacing:.4px;line-height:1.1}
-    .stat .n{font-size:15.5px;margin-top:1px;line-height:1.1}
-    .stat .u{font-size:8px;line-height:1.1}
-    .stats[style*="repeat(2"]{grid-template-columns:repeat(3,1fr)!important}
-    /* All Vehicles has exactly 4 stat cards → put them on ONE line (4-up) */
-    #today_stats{grid-template-columns:repeat(4,1fr)!important;gap:5px}
-    #today_stats .stat{padding:6px 6px}
-    #today_stats .stat .k{font-size:7px;letter-spacing:.2px}
-    #today_stats .stat .n{font-size:14px}
-    #today_stats .stat .u{font-size:7px}
+    .stats{grid-template-columns:repeat(2,1fr);gap:9px}
+    .stat{padding:11px}
+    .stat .k{font-size:9.5px;letter-spacing:.7px}
+    .stat .n{font-size:21px;margin-top:4px}
+    .stat .u{font-size:10px}
+    .stats[style*="repeat(3"]{grid-template-columns:repeat(3,1fr)!important}
 
     /* ---------- panels / sections ---------- */
-    .panel .head{padding:10px 11px}
-    .panel .head h2{font-size:10.5px}
-    .panel .body{padding:10px}
-    .sectiontitle{margin:13px 2px 7px}
-    .sectiontitle h3{font-size:11px;letter-spacing:.4px}
-    .sectiontitle h3::before{height:11px}
-    /* section "eyebrow" counts (e.g. "1 WAITING", "0 IN YARD") — smaller, less shouty */
-    .eyebrow{font-size:8.5px!important;letter-spacing:1px!important}
+    .panel .head{padding:12px 13px}
+    .panel .head h2{font-size:12px}
+    .panel .body{padding:13px}
+    .sectiontitle{margin:18px 2px 10px}
+    .sectiontitle h3{font-size:13px}
 
-    /* ---------- inputs (global dense pass) ---------- */
-    .logsearch{font-size:11px!important;padding:7px 11px!important}
-    .logbar{gap:8px;margin-bottom:10px}
-    .qbox-input{font-size:11px!important;padding:7px 11px!important}
-    .qbox-row{gap:8px!important}
-    .qchips{gap:6px!important}
-    .qchips .chip,.qchips button{font-size:10px!important;padding:4px 9px!important}
-    .qbox-panel .body{padding:9px!important}
-    /* sub-tabs: ONE horizontally-scrollable row (swipe to reach Masters/Summary/Intelligence) */
-    .subtabs{flex-wrap:nowrap!important;overflow-x:auto;-webkit-overflow-scrolling:touch;
-      scrollbar-width:none;margin-bottom:12px}
+    /* ---------- sub-tabs ---------- */
+    .subtabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
     .subtabs::-webkit-scrollbar{display:none}
-    .subtabs button{flex:0 0 auto!important;padding:6px 10px;font-size:12px;white-space:nowrap}
+    .subtabs button{flex:none;padding:9px 13px;font-size:12.5px;white-space:nowrap}
 
-    /* ---------- buttons (global dense pass) ---------- */
-    button.btn{padding:7px 11px;font-size:11px;border-radius:8px}
-    button.btn.sm{padding:5px 9px;font-size:10px;border-radius:7px}
-    /* the primary blue action (Send to Yard, Ask, etc.) — compact but still tappable */
-    button.btn.blue,button.btn.ok,button.btn.cta-send{padding:7px 12px!important;font-size:11px!important;min-height:32px!important}
+    /* ---------- buttons ---------- */
+    button.btn{padding:11px 14px;font-size:13px}
+    button.btn.sm{padding:8px 10px;font-size:12px}
 
     /* ====================================================================
        SHARED FOUNDATION for every list row.
@@ -675,7 +636,7 @@
     #ov_docklist .c-veh{grid-column:1;grid-row:1}
     #ov_docklist .c-ven{grid-column:1;grid-row:2}
     #ov_docklist .c-dk{grid-column:2;grid-row:1;justify-self:end}
-    #ov_docklist .c-dk .locpill{font-size:9.5px;padding:2px 7px}
+    #ov_docklist .c-dk .locpill{font-size:9px;padding:2px 7px}
     #ov_docklist .c-eta{grid-column:2;grid-row:2;justify-self:end}
     #ov_docklist .eta{font:700 var(--m-out) var(--mono);color:var(--green)}
     #ov_docklist .eta.over{color:var(--red)}
@@ -691,29 +652,27 @@
     #bd_queue thead,#bd_hold thead{display:none}
     #bd_queue tbody,#bd_hold tbody{display:block}
     #bd_queue tr,#bd_hold tr{
-      display:grid;grid-template-columns:auto 1fr auto;grid-auto-rows:min-content;align-items:center;gap:2px 12px;
+      display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:1px 12px;
       padding:var(--m-pad) 8px var(--m-pad) var(--m-pad);
       border-bottom:1px solid var(--line-soft);background:transparent;
     }
     #bd_queue tr::before,#bd_hold tr::before{
-      content:"";grid-column:1;grid-row:1;align-self:center;
+      content:"";grid-column:1;grid-row:1 / span 2;align-self:center;
       width:9px;height:9px;border-radius:50%;background:var(--blue-sky);box-shadow:0 0 8px var(--blue-sky);
     }
     #bd_hold tr::before{background:var(--red);box-shadow:0 0 8px var(--red)}
-    #bd_queue td,#bd_hold td{display:inline;border:none!important;padding:0!important;margin:0;font-size:12.5px;color:var(--muted)}
+    #bd_queue td,#bd_hold td{display:inline;border:none!important;padding:0!important;margin:0;font-size:12px;color:var(--muted)}
     #bd_queue td::before,#bd_hold td::before{content:none!important}
     #bd_queue td[data-label="Vehicle"],#bd_hold td[data-label="Vehicle"]{
       grid-column:2;grid-row:1;font:800 var(--m-anchor) var(--mono);color:var(--ink);
       white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    #bd_queue td[data-label="Predicted Dock"]{grid-column:3;grid-row:1;justify-self:end;font:700 12.5px var(--mono)!important;color:var(--ink)}
+    #bd_queue td[data-label="Predicted Dock"]{grid-column:3;grid-row:1;justify-self:end;font:700 13px var(--mono)!important;color:var(--ink)}
     #bd_queue td[data-label="Vendor"],#bd_hold td[data-label="Vendor"]{
-      grid-column:2;grid-row:2;font-size:12.5px;color:var(--muted);font-weight:600;
+      grid-column:2;grid-row:2;font-size:12px;color:var(--muted);font-weight:600;
       white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     #bd_queue td[data-label="Predicted Wait"]{grid-column:3;grid-row:2;justify-self:end;font:600 11px var(--mono)!important;color:var(--dim)}
-    /* hold reason on its OWN line (row 3) — full width, amber, never overlapping vendor */
-    #bd_hold td[data-label="Hold Reason"]{grid-column:1 / -1;grid-row:3;margin-top:4px;
-      font-size:11px;color:var(--amber);white-space:normal;line-height:1.3}
-    #bd_hold td[data-label="Hold Reason"]::before{content:"⏸ ";}
+    #bd_hold td[data-label="Hold Reason"]{grid-column:2 / -1;grid-row:2;font-size:11px;color:var(--amber);
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     #bd_hold td[data-label="Stage"]{grid-column:3;grid-row:1;justify-self:end;font:600 11px var(--mono)!important;color:var(--dim)}
     #bd_queue td[data-label="#"],#bd_queue td[data-label="Stage"],
     #bd_queue td[data-label="Gate Entry"],#bd_queue td[data-label="Waited"],
@@ -727,50 +686,35 @@
                   └ line tracker (gate→dock→released→GRN), full width
        ==================================================================== */
     #todaylist .vrow,#grnpending_list .vrow{min-width:0!important}
-    /* lights legend — compact, learnable key for the timeline colours */
-    .light-legend{display:flex;flex-wrap:wrap;gap:5px 12px;align-items:center;
-      padding:7px 10px;margin-bottom:8px;border:1px solid var(--line-soft);border-radius:8px;
-      background:var(--panel2)}
-    .light-legend .lg{display:inline-flex;align-items:center;gap:5px;font:600 9px var(--mono);
-      letter-spacing:.3px;text-transform:uppercase;color:var(--muted)}
-    .light-legend .lg-dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto}
-    .light-legend .lg-wait{background:#3da5ff;box-shadow:0 0 5px rgba(61,165,255,.6)}
-    .light-legend .lg-dock{background:var(--amber);box-shadow:0 0 5px rgba(255,176,32,.6)}
-    .light-legend .lg-rel{background:var(--green);box-shadow:0 0 5px rgba(57,217,138,.6)}
-    .light-legend .lg-grn{background:#8b5cf6;box-shadow:0 0 5px rgba(167,114,255,.6)}
-    .light-legend .lg-held{background:#e0455e;box-shadow:0 0 5px rgba(224,69,94,.6)}
     .logrow{
-      display:grid!important;grid-template-columns:1fr auto;align-items:center;gap:0 12px;
+      display:grid!important;grid-template-columns:1fr auto;align-items:center;gap:1px 12px;
       height:auto!important;min-height:0!important;
-      padding:7px 8px 7px 10px!important;
+      padding:var(--m-pad) 8px var(--m-pad) var(--m-pad)!important;
       border-bottom:1px solid var(--line-soft)!important;background:transparent!important;
       box-shadow:none!important;margin:0!important;cursor:pointer;
     }
     .logrow.expanded{background:rgba(47,127,255,.05)!important}
     /* status dot removed — the line tracker already shows status. */
-    .logrow .c-ven{grid-column:1;grid-row:1;font-size:12.5px!important;font-weight:700;color:var(--ink);line-height:1.25}
-    .logrow .c-stage{grid-column:2;grid-row:1;justify-self:end;font-size:9.5px!important;font-weight:700;
+    .logrow .c-ven{grid-column:1;grid-row:1;font-size:var(--m-anchor)!important;font-weight:700;color:var(--ink)}
+    .logrow .c-stage{grid-column:2;grid-row:1;justify-self:end;font-size:11px!important;font-weight:700;
       text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
-    .logrow .c-veh{grid-column:1;grid-row:2;font-size:11px!important;font-weight:600;color:var(--muted);
-      padding:0!important;border:none!important;line-height:1.2}
-    .logrow .veh-toggle{flex:0 0 auto;color:var(--dim);font-size:9.5px}
-    .logrow .c-sz2{grid-column:2;grid-row:1;justify-self:end;font:600 9.5px var(--mono);color:var(--dim)}
-    /* compact timeline: sits close under the header, smaller nodes, thin spacing */
+    .logrow .c-veh{grid-column:1;grid-row:2;font-size:12px!important;font-weight:600;color:var(--muted);
+      padding:0!important;border:none!important}
+    .logrow .veh-toggle{flex:0 0 auto;color:var(--dim);font-size:10px}
+    .logrow .c-sz2{grid-column:2;grid-row:2;justify-self:end;font:600 11px var(--mono);color:var(--dim)}
     .logrow .c-track{display:flex!important;grid-column:1 / -1;grid-row:3;width:100%;flex:0 0 auto!important;
-      margin-top:5px;padding-top:0;border-top:none;overflow:visible}
-    .logrow .c-track .track{width:100%;padding:2px 4px 0}
-    .logrow .c-track .node-dot{width:13px;height:13px}
-    /* lights-only: drop the per-node text labels — the coloured bulbs carry the meaning */
-    .logrow .c-track .node-lbl{display:none!important}
-    .logrow .c-track .track-line{top:7px;left:12px;right:12px}
-    /* lights-only: drop the right-side stage word too (the timeline shows status) */
-    .logrow .c-stage{display:none!important}
+      margin-top:8px;padding-top:8px;border-top:1px solid var(--line-soft);overflow:visible}
+    .logrow .c-track .track{width:100%;padding:6px 4px 2px}
+    /* mobile tracker: bigger, clearer nodes so all 4 stages incl. GRN read well */
+    .logrow .c-track .node-dot{width:16px;height:16px}
+    .logrow .c-track .node-lbl{font-size:9px}
+    .logrow .c-track .track-line{top:13px;left:14px;right:14px}
     .logrow .c-sl,.logrow .c-q,.logrow .c-t,.logrow .c-wt,.logrow .c-grn{display:none!important}
     .logrow.row-sla{background:rgba(255,176,32,.06)!important}
     .logdetail-wrap{padding:0 16px 12px 16px!important;background:rgba(47,127,255,.04)}
     /* GRN action lives in the expanded detail panel on mobile */
     .logdetail .ld-grn-action{display:flex;gap:8px;margin-top:10px}
-    .logdetail .ld-grn-action .grnbtn{flex:1 1 auto;min-height:42px;font-size:12.5px;border-radius:9px}
+    .logdetail .ld-grn-action .grnbtn{flex:1 1 auto;min-height:42px;font-size:13px;border-radius:9px}
 
     /* ====================================================================
        SECURITY · GATE  →  triage; action on the right of the alert row
@@ -792,15 +736,15 @@
     #allvehicles .c-act{grid-column:3;grid-row:1 / span 2;align-self:center;justify-self:end;
       flex:0 0 auto!important;width:auto!important;display:flex;justify-content:flex-end}
     #allvehicles .c-act .btn{font-size:12.5px;padding:8px 12px;min-height:var(--m-tap);white-space:nowrap;border-radius:9px}
-    #allvehicles .c-act>span{color:var(--dim);font-size:12.5px}   /* the "—" no-action marker, quiet */
+    #allvehicles .c-act>span{color:var(--dim);font-size:13px}   /* the "—" no-action marker, quiet */
     #allvehicles .c-act:empty{display:none}
     #allvehicles .c-ven{grid-column:2;grid-row:2;font-size:var(--m-sub);font-weight:600;color:var(--muted);
       white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     /* location pill sits at the right of the vendor line (under the action) */
     #allvehicles .c-loc{grid-column:2 / -1;grid-row:2;justify-self:end;align-self:center;display:inline-flex;pointer-events:none}
-    #allvehicles .c-loc .locpill{font-size:9.5px;padding:2px 7px}
+    #allvehicles .c-loc .locpill{font-size:9px;padding:2px 7px}
     #allvehicles .c-veh .drv-btn{flex:0 0 auto;min-height:0;padding:1px 6px}
-    #allvehicles .drv-none{font-size:9.5px;color:var(--dim)}
+    #allvehicles .drv-none{font-size:10px;color:var(--dim)}
 
     /* ====================================================================
        CALL TO ACTION  →  the acting screen. Card per vehicle.
@@ -813,13 +757,13 @@
     .cta-row{
       display:grid!important;
       grid-template-columns:1fr auto;            /* identity | action */
-      align-items:center;gap:5px 16px;
+      align-items:center;gap:9px 10px;
       height:auto!important;min-height:0!important;
-      padding:10px!important;
+      padding:13px!important;
       border:1px solid var(--line);border-left:3px solid var(--blue-azure);
       border-radius:var(--m-radius);
       background:linear-gradient(180deg,var(--panel),var(--panel2));
-      margin-bottom:7px;box-shadow:var(--shadow-sm);
+      margin-bottom:9px;box-shadow:var(--shadow-sm);
     }
     .cta-row.is-ready{border-left-color:var(--green)}
     .cta-row.hold-row{border-left-color:var(--red)}
@@ -832,16 +776,17 @@
     .cta-row .c-veh{grid-column:1;grid-row:1;
       font:800 var(--m-anchor) var(--mono)!important;color:var(--ink);
       display:flex;align-items:center;gap:7px;flex-wrap:wrap}
-    .cta-row .c-pos{display:none!important}   /* position now shown inline inside the plate */
-    .cta-row .c-veh .pos-inline{font:700 9px var(--mono);letter-spacing:.3px;color:var(--muted);
-      background:var(--panel3);border:1px solid var(--line);border-radius:5px;padding:0 5px;margin-right:5px;flex:0 0 auto}
-    .cta-row .c-veh .pos-inline.next{color:var(--amber);border-color:rgba(255,176,32,.5)}
+    .cta-row .c-pos{order:-1;align-self:center;width:auto!important;
+      background:var(--panel3);color:var(--muted);border:1px solid var(--line);border-radius:6px;
+      padding:1px 7px;font:700 10px var(--mono);letter-spacing:.5px}
+    .cta-row .c-pos::before{content:"#"}
+    .cta-row .c-pos.next{color:var(--amber);border-color:rgba(255,176,32,.5)}
     /* the action sits on the right edge, spanning the card's rows */
-    .cta-row .c-send{grid-column:2;grid-row:4;align-self:center;justify-self:end;
+    .cta-row .c-send{grid-column:2;grid-row:1 / span 2;align-self:center;justify-self:end;
       display:flex;justify-content:flex-end}
     .cta-row .c-send .cta-send,.cta-row .c-send button{
-      min-height:28px!important;font-size:10.5px!important;font-weight:700;padding:5px 10px!important;
-      border-radius:7px;white-space:nowrap}
+      min-height:var(--m-tap);font-size:13px!important;font-weight:700;padding:10px 14px!important;
+      border-radius:9px;white-space:nowrap}
 
     /* row 2: vendor · size  (quiet subtitle, no labels) */
     .cta-row .c-ven{grid-column:1;grid-row:2;
@@ -852,59 +797,33 @@
     .cta-row .c-sz{display:none!important}
 
     /* row 3: the BLOCKER — what's stopping this vehicle (full width, prominent) */
-    .cta-row .c-status{grid-column:1 / -1;grid-row:3;font-size:12.5px}
+    .cta-row .c-status{grid-column:1 / -1;grid-row:3;font-size:12px}
     .cta-row .c-status:empty{display:none}
 
-    /* waiting banner hidden on mobile — the dim/glowing icons show what's pending */
-    .cta-row .c-status{display:none!important}
-    /* zone + papers: icon-only toggles, NO text labels/headers (icons carry meaning) */
-    .cta-row .cta-controls{grid-column:1;grid-row:4;display:flex;align-items:center;
-      flex-wrap:wrap;gap:6px 12px;justify-self:start;min-width:0;overflow:visible;
-      padding:3px 8px 3px 0;margin-left:2px}
-    /* segmini icon-box: keep it fully inside the card (don't sit under the left stripe) */
-    .cta-row .segicons{flex:0 0 auto;max-width:100%}
-    .cta-row .c-zone2,.cta-row .c-pap{display:inline-flex;align-items:center;gap:6px;overflow:visible}
-    .cta-row .segmini.segicons{overflow:visible;padding:1px}
-    /* no "Zone"/"Papers" labels anymore */
-    .cta-row .c-zone2::before,.cta-row .c-pap::before{content:none!important}
-    /* icon toggle buttons — square-ish, just the symbol */
-    .cta-row .segicons .segb,.cta-row .c-pap .papicon{
-      min-width:34px;min-height:28px!important;padding:3px 8px!important;font-size:14px!important;
-      display:inline-flex;align-items:center;justify-content:center;line-height:1;border-radius:7px;
-      transition:filter .15s, opacity .15s, background .15s}
-    .cta-row .segicons .segb::before{content:none!important}
-    /* DIM when not selected, NEON GLOW when selected */
-    .cta-row .segicons .segb,.cta-row .c-pap .segicons .segb{opacity:.38;filter:grayscale(.3)}
-    .cta-row .segicons .segb.on{opacity:1;filter:none;
-      box-shadow:0 0 0 1px rgba(61,165,255,.5), 0 0 10px 1px rgba(61,165,255,.55);
-      background:rgba(61,165,255,.12)}
-    /* zone-specific glow colours */
-    .cta-row .segicons .segb.on.amb{box-shadow:0 0 0 1px rgba(255,176,32,.55), 0 0 11px 1px rgba(255,176,32,.6);background:rgba(255,176,32,.13)}
-    .cta-row .segicons .segb.on.chl{box-shadow:0 0 0 1px rgba(61,165,255,.6), 0 0 11px 1px rgba(61,165,255,.6);background:rgba(61,165,255,.14)}
-    /* papers: OK green glow, Hold amber glow */
-    .cta-row .c-pap .papicon.okp.on,.cta-row .c-pap .segb.okp.on{opacity:1;filter:none;
-      box-shadow:0 0 0 1px rgba(57,217,138,.6), 0 0 11px 1px rgba(57,217,138,.6);background:rgba(57,217,138,.14)}
-    .cta-row .c-pap .papicon.holdp.on{opacity:1;filter:none;
-      box-shadow:0 0 0 1px rgba(255,176,32,.6), 0 0 11px 1px rgba(255,176,32,.6);background:rgba(255,176,32,.14)}
-    /* the standalone papers-OK single toggle (already-ok state) always lit green */
-    .cta-row .c-pap>.papicon.okp{opacity:1;filter:none;
-      box-shadow:0 0 0 1px rgba(57,217,138,.55), 0 0 10px 1px rgba(57,217,138,.5);background:rgba(57,217,138,.13)}
-    /* yard card uses a STANDALONE c-zone2 (zone pill). Put it on the VENDOR line (row 2),
-       right-aligned — NOT on row 4 where it collided with the dock buttons. */
-    .cta-row > .c-zone2{grid-column:2;grid-row:2;justify-self:end;align-self:center}
-    .cta-row > .c-zone2::before{content:""}   /* yard zone pill shows the zone itself, no label */
-    .cta-row > .c-zone2 .zpill{font-size:9px;padding:2px 8px;text-transform:uppercase;letter-spacing:.4px}
-    /* zone toggles with ☀️/❄️ symbols — compact */
-    .cta-row .segmini{display:inline-flex!important;gap:5px;flex:0 0 auto!important;width:auto!important}
-    .cta-row .segmini .segb{flex:0 0 auto!important;width:auto!important;min-height:26px!important;
-      padding:3px 9px!important;font-size:10.5px!important;line-height:1;
-      display:inline-flex;align-items:center;justify-content:center;gap:4px}
-    /* the single papers OK button (when already ok) — compact pill, not full width */
-    .cta-row .c-pap .segb{flex:0 0 auto!important;width:auto!important;min-height:26px!important;
-      padding:3px 9px!important;font-size:10.5px!important;line-height:1}
-    .cta-row .c-pap .papna{font-size:9.5px;color:var(--dim)}
-    /* zone pill (locked / yard) → small */
-    .cta-row .c-zone2 .zpill{font-size:11px;padding:3px 8px}
+    /* row 4+: only the controls this vehicle needs (full width) */
+    .cta-row .c-zone2,.cta-row .c-pap{grid-column:1 / -1;display:flex;align-items:center;gap:8px}
+    .cta-row .c-zone2{grid-row:4}
+    .cta-row .c-pap{grid-row:5}
+    .cta-row .c-zone2::before,.cta-row .c-pap::before{
+      font:600 var(--m-label) var(--mono);letter-spacing:.3px;text-transform:uppercase;color:var(--dim);flex:0 0 44px}
+    .cta-row .c-zone2::before{content:"Zone"}
+    .cta-row .c-pap::before{content:"Papers"}
+    /* zone toggles with ☀️/❄️ symbols */
+    .cta-row .segmini{display:inline-flex;gap:5px;flex:1 1 auto}
+    .cta-row .segmini .segb{flex:1 1 auto;min-height:38px;font-size:12.5px;
+      display:inline-flex;align-items:center;justify-content:center;gap:5px}
+    .cta-row .segmini .segb[data-z="ambient"]::before{content:"\2600\FE0F";font-size:13px}
+    .cta-row .segmini .segb[data-z="chiller"]::before{content:"\2744\FE0F";font-size:13px}
+    /* papers ✓ / ⏸ symbols only */
+    .cta-row .c-pap .segb{font-size:0!important;gap:0;min-width:46px}
+    .cta-row .c-pap .segb::before{font-size:16px;line-height:1}
+    .cta-row .c-pap .segb[data-pap="ok"]::before{content:"\2713"}
+    .cta-row .c-pap .segb[data-pap="hold"]::before{content:"\23F8"}
+    .cta-row .c-pap .papna{font-size:11px;color:var(--dim)}
+    /* zone pill (yard card) → ☀️/❄️ symbol, no "Zone" label */
+    .cta-row .c-zone2 .zpill{font-size:0;padding:3px 8px;gap:0}
+    .cta-row .c-zone2 .zpill::before{font-size:14px;line-height:1}
+    .cta-row .c-zone2 .zpill.zamb::before{content:"\2600\FE0F"}
     .cta-row .c-zone2 .zpill.zchl::before{content:"\2744\FE0F"}
     .cta-row .c-zone2:has(.zpill)::before{display:none}
     .cta-row .c-zone2:has(.zpill){gap:0;grid-row:4}
@@ -924,7 +843,7 @@
     .cta-row .c-docks .dockchips{display:flex;flex-wrap:wrap;gap:7px;width:100%;justify-content:flex-start}
     .cta-row .c-docks .dchip{
       min-height:var(--m-tap);display:inline-flex;align-items:center;justify-content:center;
-      padding:0 16px;font-size:12.5px;font-weight:700;border-radius:9px;
+      padding:0 16px;font-size:13.5px;font-weight:700;border-radius:9px;
       border:1px solid var(--blue-sky);background:rgba(47,127,255,.12);color:var(--blue-sky);
     }
     /* the recommended dock = the obvious primary choice (filled green) */
@@ -933,41 +852,36 @@
       box-shadow:0 0 10px rgba(52,228,160,.4);
     }
     /* en-route state: clear status text, not a button */
-    .cta-row .c-docks .yard-enroute{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--amber);font-weight:600}
+    .cta-row .c-docks .yard-enroute{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--amber);font-weight:600}
     .cta-row .c-docks:has(.yard-enroute)::before{display:none}   /* no "assign" label while moving */
     .cta-row .c-veh .drv-btn{flex:0 0 auto}
     /* hold card: reason is the blocker line */
-    .cta-row .c-reason{grid-column:1 / -1;grid-row:3;font-size:11px;color:var(--amber)}
+    .cta-row .c-reason{grid-column:1 / -1;grid-row:3;font-size:12px;color:var(--amber)}
 
     /* CTA dock cards (the Docks sub-tab) */
     .dockgrid{grid-template-columns:1fr 1fr!important;gap:12px}
     .dcard{padding:12px}
-    .dcard-timer{font-size:17px}
+    .dcard-timer{font-size:21px}
 
     /* ====================================================================
        GATE ENTRY FORM + inputs
        ==================================================================== */
-    input,select,textarea{font-size:17px!important;padding:13px 13px}   /* 16px stops iOS zoom */
-    .field label{font-size:12.5px}
+    input,select,textarea{font-size:16px!important;padding:13px 13px}   /* 16px stops iOS zoom */
+    .field label{font-size:12px}
     .row2{grid-template-columns:1fr;gap:0}
-    .seg{padding:2px;gap:3px;width:max-content;max-width:100%}
-    .seg-btn{min-height:27px;font-size:10.5px;padding:4px 14px;flex:0 0 auto}
+    .seg-btn{min-height:44px;font-size:13px}
     #f_purpose_seg{display:flex;gap:8px}
     #f_purpose_seg .seg-btn{flex:1 1 auto}
-    /* Queue/Docks toggle — tight pill pair, only as wide as the two words */
-    .ctatabs{width:max-content!important;max-width:100%;padding:2px!important;gap:2px!important;
-      border-radius:9px!important;margin-bottom:12px!important}
-    .ctatab{font-size:11px!important;padding:5px 14px!important;flex:0 0 auto!important;border-radius:7px!important}
-    #f_submit,.gate-submit{width:100%;min-height:50px;font-size:17px}
-    #f_time{width:100%;max-width:100%;box-sizing:border-box;text-align:left;-webkit-appearance:none;appearance:none;font-size:17px!important}
+    #f_submit,.gate-submit{width:100%;min-height:50px;font-size:15px}
+    #f_time{width:100%;max-width:100%;box-sizing:border-box;text-align:left;-webkit-appearance:none;appearance:none;font-size:15px!important}
     #f_time::-webkit-date-and-time-value{text-align:left;margin:0}
-    .veh-fmt,.veh-hint{font-size:11px}
+    .veh-fmt,.veh-hint{font-size:11.5px}
   }
   @media(max-width:430px){
-    .stat .n{font-size:17px}
+    .stat .n{font-size:19px}
     .mexp-grid{grid-template-columns:1fr}
     .logrow .c-ven,#bd_queue td[data-label="Vehicle"],#bd_hold td[data-label="Vehicle"],
-    #ov_docklist .c-veh,#allvehicles .c-veh,.cta-row .c-veh{font-size:12.5px!important}
+    #ov_docklist .c-veh,#allvehicles .c-veh,.cta-row .c-veh{font-size:14px!important}
     .dockgrid{grid-template-columns:1fr!important}
   }
   .twocol{display:grid;grid-template-columns:1.05fr .95fr;gap:16px}
@@ -982,7 +896,7 @@
   .vrow>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .vrow:hover:not(.vhead){background:rgba(61,165,255,.05)}
   .vrow:last-child{border-bottom:0}
-  .vhead{height:36px;font:700 9.5px var(--mono);letter-spacing:.7px;text-transform:uppercase;
+  .vhead{height:36px;font:700 10px var(--mono);letter-spacing:.7px;text-transform:uppercase;
     color:var(--dim);background:var(--panel3);border-bottom:1px solid var(--line);
     position:sticky;top:0;z-index:2}
   .c-alert{flex:0 0 16px;text-align:center;overflow:visible}
@@ -999,7 +913,7 @@
   .seg-btn:hover:not(.active){color:var(--ink)}
   .seg-btn.active{background:linear-gradient(180deg,#1d2c4a,#16233d);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
   .seg-btn.active[data-p="loading"]{background:linear-gradient(180deg,#1e3358,#162844);color:var(--violet)}
-  .icmtag{font:700 8px var(--mono);letter-spacing:.5px;color:var(--violet);
+  .icmtag{font:700 8.5px var(--mono);letter-spacing:.5px;color:var(--violet);
     background:rgba(111,140,255,.16);padding:1px 5px;border-radius:5px;vertical-align:middle}
   .c-types{flex:1 1 200px;min-width:120px}
   .c-types.dim{color:var(--dim)}
@@ -1016,14 +930,14 @@
   .vrow.mrow:active{background:rgba(61,165,255,.14)}
   .vrow.mrow.open{background:rgba(61,165,255,.1);box-shadow:inset 3px 0 0 var(--ambient)}
   .vrow.mrow .chev{margin-left:auto;flex:0 0 16px;text-align:center;color:var(--dim);
-    transition:transform .15s;font-size:9.5px}
+    transition:transform .15s;font-size:10px}
   .vrow.mrow.open .chev{transform:rotate(90deg);color:var(--ambient)}
   .mexp{padding:14px 16px;background:var(--panel2);border-bottom:1px solid var(--line);
     box-shadow:inset 3px 0 0 var(--ambient)}
   .mexp-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  .mexp label{display:flex;flex-direction:column;gap:5px;font-size:11px;color:var(--muted);font-weight:600}
+  .mexp label{display:flex;flex-direction:column;gap:5px;font-size:11.5px;color:var(--muted);font-weight:600}
   .mexp input,.mexp select{background:var(--bg);border:1px solid var(--line);color:var(--ink);
-    padding:9px 11px;border-radius:9px;font:500 12.5px var(--sans);outline:none}
+    padding:9px 11px;border-radius:9px;font:500 13.5px var(--sans);outline:none}
   .mexp input:focus,.mexp select:focus{border-color:var(--ambient);box-shadow:0 0 0 3px rgba(61,165,255,.15)}
   .mtools{display:flex;gap:6px;flex-wrap:wrap}
   .chips{display:flex;flex-wrap:wrap;gap:8px}
@@ -1039,13 +953,13 @@
   .mphead{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 14px;cursor:pointer}
   .mptitle{display:flex;align-items:center;gap:11px;min-width:0}
   .mpicon{width:34px;height:34px;flex:none;border-radius:9px;background:var(--panel2);
-    border:1px solid var(--line);display:grid;place-items:center;font-size:17px}
-  .mpname{font-size:12.5px;font-weight:700;letter-spacing:.2px}
-  .mpsub{font:600 9.5px var(--mono);letter-spacing:.4px;color:var(--dim);margin-top:1px;text-transform:uppercase}
+    border:1px solid var(--line);display:grid;place-items:center;font-size:16px}
+  .mpname{font-size:14.5px;font-weight:700;letter-spacing:.2px}
+  .mpsub{font:600 10px var(--mono);letter-spacing:.4px;color:var(--dim);margin-top:1px;text-transform:uppercase}
   .mpright{display:flex;align-items:center;gap:8px;flex:none}
   .mpcount{font:800 17px var(--sans);color:var(--ambient)}
   .mpchev{background:var(--panel2);border:1px solid var(--line);color:var(--muted);width:28px;height:28px;
-    border-radius:8px;cursor:pointer;font-size:12.5px;transition:.15s;display:grid;place-items:center}
+    border-radius:8px;cursor:pointer;font-size:12px;transition:.15s;display:grid;place-items:center}
   .mpchev:hover{color:var(--ink)}
   .mpchev.col{transform:rotate(-90deg)}
   .mpbody{border-top:1px solid var(--line)}
@@ -1054,8 +968,8 @@
   .mlist .vhead{padding-top:10px;padding-bottom:10px}
   .mprow{display:flex;gap:8px;padding:11px 14px;border-top:1px solid var(--line)}
   .uploadbox{border-top:1px solid var(--line);padding:16px;background:rgba(0,0,0,.12)}
-  .ulabel{font:700 11px var(--mono);letter-spacing:1.2px;color:var(--dim);text-transform:uppercase;margin-bottom:10px}
-  .uhint{font:500 12.5px var(--mono);color:var(--dim);line-height:1.6;
+  .ulabel{font:700 10.5px var(--mono);letter-spacing:1.2px;color:var(--dim);text-transform:uppercase;margin-bottom:10px}
+  .uhint{font:500 12px var(--mono);color:var(--dim);line-height:1.6;
     background:var(--panel2);border:1px dashed var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px}
   .usample{color:var(--muted)}
   .utext{width:100%;min-height:90px;resize:vertical;background:var(--panel2);border:1px solid var(--line);
@@ -1063,17 +977,17 @@
   .utext:focus{border-color:var(--ambient);box-shadow:0 0 0 3px rgba(61,165,255,.15)}
   .mexp-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   .mexp{padding:14px 16px;background:rgba(0,0,0,.15);border-top:1px solid var(--line)}
-  .mexp label{display:block;font-size:11px;color:var(--muted);font-weight:600}
+  .mexp label{display:block;font-size:11.5px;color:var(--muted);font-weight:600}
   .mexp input,.mexp select{width:100%;margin-top:5px;background:var(--panel2);border:1px solid var(--line);
-    color:var(--ink);padding:9px 11px;border-radius:9px;font:500 12.5px var(--sans);outline:none}
+    color:var(--ink);padding:9px 11px;border-radius:9px;font:500 13.5px var(--sans);outline:none}
   .mexp input:focus,.mexp select:focus{border-color:var(--ambient)}
   .mrow{cursor:pointer}
   .minput{width:90px;background:var(--panel2);border:1px solid var(--line);color:var(--ink);
-    padding:7px 9px;border-radius:8px;font:600 12.5px var(--mono);outline:none}
+    padding:7px 9px;border-radius:8px;font:600 13px var(--mono);outline:none}
   .minput:focus{border-color:var(--ambient);box-shadow:0 0 0 3px rgba(61,165,255,.15)}
   .modal-opts{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;max-height:300px;overflow:auto}
   .optbtn{text-align:left;background:var(--panel2);border:1px solid var(--line);color:var(--ink);
-    padding:11px 13px;border-radius:10px;font:600 12.5px var(--sans);cursor:pointer;transition:.12s}
+    padding:11px 13px;border-radius:10px;font:600 13.5px var(--sans);cursor:pointer;transition:.12s}
   .optbtn:hover{border-color:var(--ambient)}
   .optbtn.on{border-color:var(--ambient);background:rgba(61,165,255,.12);color:var(--ambient)}
   .c-act{flex:0 0 132px;text-align:right;display:flex;justify-content:flex-end;overflow:visible}
@@ -1081,7 +995,7 @@
   button.btn.xs{padding:5px 10px;font-size:11px;border-radius:7px;white-space:nowrap}
   /* subtle delete in master/tracker rows */
   .c-x .btn.danger{padding:0;width:24px;height:24px;display:grid;place-items:center;
-    background:transparent;color:var(--dim);box-shadow:inset 0 0 0 1px var(--line);font-size:12.5px}
+    background:transparent;color:var(--dim);box-shadow:inset 0 0 0 1px var(--line);font-size:12px}
   .c-x .btn.danger:hover{background:rgba(255,93,108,.15);color:var(--red);box-shadow:inset 0 0 0 1px rgba(255,93,108,.4)}
   /* green alert from warehouse */
   .vrow.alerted{background:rgba(57,217,138,.07);box-shadow:inset 3px 0 0 var(--green)}
@@ -1109,7 +1023,7 @@
     border:1px solid rgba(94,194,255,.5);border-radius:6px;padding:3px 8px;white-space:nowrap;
     text-shadow:0 0 8px rgba(94,194,255,.7)}
   .sec-alert[data-k=released] .sec-alert-tag{color:var(--green);border-color:rgba(57,217,138,.5);text-shadow:0 0 8px rgba(57,217,138,.7)}
-  .sec-alert-msg{font:700 12.5px var(--sans);color:var(--ink)}
+  .sec-alert-msg{font:700 14px var(--sans);color:var(--ink)}
   .sec-alert-drv{font:700 12.5px var(--mono);color:var(--blue-sky);background:rgba(47,127,255,.14);
     border:1px solid rgba(94,194,255,.4);border-radius:7px;padding:3px 9px;white-space:nowrap}
   .sec-alert-time{font:600 11px var(--mono);color:var(--dim)}
@@ -1119,7 +1033,7 @@
   .sec-alert-x:hover{background:rgba(94,194,255,.18);border-color:var(--blue-sky);color:#fff}
 
   /* tappable driver-number reveal on each security row */
-  .drv-btn{font-size:12.5px;line-height:1;background:rgba(47,127,255,.14);border:1px solid rgba(94,194,255,.4);
+  .drv-btn{font-size:13px;line-height:1;background:rgba(47,127,255,.14);border:1px solid rgba(94,194,255,.4);
     border-radius:7px;padding:2px 7px;cursor:pointer;vertical-align:middle;transition:.12s}
   .drv-btn:hover{background:rgba(94,194,255,.28)}
   .drv-btn.on{background:var(--blue-azure);border-color:var(--blue-sky);box-shadow:0 0 8px rgba(47,127,255,.6)}
@@ -1127,17 +1041,15 @@
      clipped by the narrow vehicle column / hidden behind the vendor column */
   .c-veh{position:relative}
   .drv-num{position:absolute;left:0;top:calc(100% + 6px);z-index:80;white-space:nowrap;
-    font:700 12.5px var(--mono);color:var(--blue-sky);
+    font:700 13px var(--mono);color:var(--blue-sky);
     background:var(--panel3);border:1px solid var(--blue-sky);border-radius:8px;padding:5px 11px;
     box-shadow:0 6px 18px rgba(0,0,0,.5)}
   .drv-num[hidden]{display:none}
-  .build-tag{position:fixed;left:8px;bottom:calc(env(safe-area-inset-bottom, 0px) + 14px);
-    z-index:200;pointer-events:none;font:700 9.5px var(--mono);letter-spacing:.5px;
-    color:var(--blue-sky);opacity:.7;background:rgba(10,18,34,.8);
-    border:1px solid rgba(94,194,255,.3);border-radius:6px;padding:3px 7px}
+  .build-tag{position:fixed;right:10px;bottom:10px;z-index:200;pointer-events:none;
+    font:700 10px var(--mono);letter-spacing:.5px;color:var(--blue-sky);opacity:.8;
+    background:rgba(10,18,34,.8);border:1px solid rgba(94,194,255,.3);border-radius:6px;padding:3px 8px}
   .drv-btn.drv-empty{opacity:.5}
   .drv-btn.drv-empty.on{background:rgba(255,255,255,.06);border-color:var(--dim);box-shadow:none}
-  /* the cell holding the reveal must not clip the popup */
   #allvehicles .c-veh,.logrow .c-veh,.cta-row .c-veh{overflow:visible!important}
   .drv-none{font-size:11px;color:var(--dim);vertical-align:middle;margin-left:2px}
   /* color-coded location pills */
@@ -1158,9 +1070,9 @@
   .modal-bg.show{display:flex}
   .modal{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);
     border-radius:16px;box-shadow:var(--shadow);max-width:380px;width:100%;padding:22px}
-  .modal-msg{font-size:12.5px;line-height:1.5;white-space:pre-line;margin-bottom:14px}
+  .modal-msg{font-size:14.5px;line-height:1.5;white-space:pre-line;margin-bottom:14px}
   .modal-input{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--ink);
-    padding:11px 12px;border-radius:10px;font:500 12.5px var(--sans);outline:none;margin-bottom:16px}
+    padding:11px 12px;border-radius:10px;font:500 14px var(--sans);outline:none;margin-bottom:16px}
   .modal-input:focus{border-color:var(--ambient);box-shadow:0 0 0 3px rgba(61,165,255,.15)}
   .modal-acts{display:flex;gap:10px;justify-content:flex-end}
   /* ==================== MASTERS (clean rebuild) ==================== */
@@ -1171,19 +1083,19 @@
   .mpicon{width:36px;height:36px;flex:none;border-radius:9px;background:var(--panel3);
     border:1px solid var(--line);display:grid;place-items:center;font-size:17px}
   .mphd{min-width:0}
-  .mpname{font-size:12.5px;font-weight:700;letter-spacing:-.01em}
-  .mpsub{font:600 9.5px var(--mono);letter-spacing:.6px;color:var(--dim);margin-top:2px;text-transform:uppercase}
+  .mpname{font-size:14.5px;font-weight:700;letter-spacing:-.01em}
+  .mpsub{font:600 10px var(--mono);letter-spacing:.6px;color:var(--dim);margin-top:2px;text-transform:uppercase}
   .mpbody{padding:8px 0 0}
   /* collapsible master panels */
   .mphead[data-act="togglePanel"]{cursor:pointer;user-select:none}
   .mphead[data-act="togglePanel"]:hover{background:rgba(255,255,255,.02)}
-  .mphead .mpchev{margin-left:auto;flex:none;color:var(--muted);font-size:12.5px;transition:transform .18s ease}
+  .mphead .mpchev{margin-left:auto;flex:none;color:var(--muted);font-size:13px;transition:transform .18s ease}
   .mpanel.collapsed .mphead{border-bottom-color:transparent}
   .mpanel.collapsed .mphead .mpchev,.mpanel.collapsed .mpchev{transform:rotate(-90deg)}
   .mpanel.collapsed .mpbody{display:none}
   .mtable{display:flex;flex-direction:column}
   .mrow{display:flex;align-items:center;gap:10px;min-height:46px;padding:0 16px;cursor:pointer;
-    border-bottom:1px solid var(--line-soft);transition:background .12s;font-size:12.5px}
+    border-bottom:1px solid var(--line-soft);transition:background .12s;font-size:13px}
   .mrow:hover{background:rgba(61,165,255,.05)}
   .mrow.open{background:rgba(61,165,255,.08)}
   .mrow .chev{flex:0 0 14px;color:var(--dim);font-size:11px;transition:transform .18s ease}
@@ -1194,13 +1106,13 @@
   .w-dock{flex:0 0 64px;font-weight:700}
   .w-zone{flex:0 0 96px}
   .w-hrs{flex:0 0 70px;text-align:right}
-  .w-min{flex:0 0 64px;text-align:right;font-size:12.5px}
+  .w-min{flex:0 0 64px;text-align:right;font-size:12px}
   .zpill{display:inline-flex;font:700 9.5px var(--mono);letter-spacing:.4px;text-transform:uppercase;
     padding:3px 9px;border-radius:var(--r-pill)}
   .zpill.zamb{background:rgba(61,165,255,.14);color:var(--ambient);box-shadow:inset 0 0 0 1px rgba(61,165,255,.4)}
   .zpill.zchl{background:rgba(52,211,192,.14);color:var(--chiller);box-shadow:inset 0 0 0 1px rgba(52,211,192,.4)}
   .micon-del{flex:0 0 26px;width:26px;height:26px;border:1px solid var(--line);background:transparent;
-    color:var(--dim);border-radius:7px;cursor:pointer;font-size:12.5px;display:grid;place-items:center;transition:.12s}
+    color:var(--dim);border-radius:7px;cursor:pointer;font-size:12px;display:grid;place-items:center;transition:.12s}
   .micon-del:hover{background:rgba(255,93,108,.15);color:var(--red);border-color:rgba(255,93,108,.4)}
   .medit{padding:14px 16px 16px;background:var(--panel3);border-bottom:1px solid var(--line);
     box-shadow:inset 3px 0 0 var(--ambient)}
@@ -1208,13 +1120,13 @@
   .medit label{display:flex;flex-direction:column;gap:6px;font-size:11px;color:var(--muted);
     font-weight:600;text-transform:uppercase;letter-spacing:.3px}
   .medit input,.medit select{background:var(--bg);border:1px solid var(--line);color:var(--ink);
-    padding:10px 11px;border-radius:var(--r-sm);font:500 12.5px var(--sans);outline:none;text-transform:none}
+    padding:10px 11px;border-radius:var(--r-sm);font:500 14px var(--sans);outline:none;text-transform:none}
   .medit input:focus,.medit select:focus{border-color:var(--ambient);box-shadow:var(--ring)}
   .medit-types{margin-top:14px}
   .medit-types-hd{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;
     letter-spacing:.3px;margin-bottom:9px}
   .chiprow{display:flex;flex-wrap:wrap;gap:7px}
-  .tchip{font:600 12.5px var(--sans);padding:7px 12px;border-radius:var(--r-pill);cursor:pointer;
+  .tchip{font:600 12px var(--sans);padding:7px 12px;border-radius:var(--r-pill);cursor:pointer;
     background:var(--panel2);border:1px solid var(--line);color:var(--muted);transition:.12s}
   .tchip:hover{color:var(--ink);border-color:var(--muted)}
   .tchip.on{background:rgba(61,165,255,.16);border-color:var(--ambient);color:var(--ambient);font-weight:700}
@@ -1223,10 +1135,10 @@
   .danger-caret{margin-left:auto;color:var(--red);font-size:14px;flex:0 0 auto;padding-left:8px}
   .danger-zone.collapsed{display:none}
   .danger-text:hover{box-shadow:inset 0 0 0 1px rgba(255,93,108,.5)!important;background:rgba(255,93,108,.08)!important}
-  .mempty{padding:26px 16px;text-align:center;color:var(--dim);font-size:12.5px}
+  .mempty{padding:26px 16px;text-align:center;color:var(--dim);font-size:13px}
   .uploadbox{padding:16px;background:rgba(0,0,0,.14)}
-  .ulabel{font:700 9.5px var(--mono);letter-spacing:1px;color:var(--dim);text-transform:uppercase;margin-bottom:9px}
-  .uhint{font:500 12.5px var(--mono);color:var(--dim);line-height:1.6;
+  .ulabel{font:700 10px var(--mono);letter-spacing:1px;color:var(--dim);text-transform:uppercase;margin-bottom:9px}
+  .uhint{font:500 12px var(--mono);color:var(--dim);line-height:1.6;
     background:var(--panel3);border:1px dashed var(--line);border-radius:var(--r-sm);padding:10px 12px;margin-bottom:10px}
   .usample{color:var(--muted)}
   .utext{width:100%;min-height:84px;resize:vertical;background:var(--panel3);border:1px solid var(--line);
@@ -1238,7 +1150,7 @@
     .w-min{display:none}
   }
   /* ==================== CALL TO ACTION board ==================== */
-  .flagrow{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--ink);
+  .flagrow{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--ink);
     text-transform:none;font-weight:500;cursor:pointer;margin:0}
   .flagrow input{width:auto;margin:0}
   .cta-head .c-pos{flex:0 0 28px}
@@ -1255,11 +1167,11 @@
   .c-ven-edit{cursor:pointer}
   .c-ven-edit:active{opacity:.7}
   .ld-admin{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px solid rgba(120,150,190,.15)}
-  .c-pos{flex:0 0 28px;text-align:center;font:700 12.5px var(--mono);color:var(--dim)}
+  .c-pos{flex:0 0 28px;text-align:center;font:700 12px var(--mono);color:var(--dim)}
   .c-pos.next{color:var(--amber)}
   .c-status{flex:1 1 auto;min-width:120px;display:flex;flex-direction:column;gap:3px;overflow:hidden}
   .cta-waiting{display:flex;flex-direction:column;gap:3px}
-  .waitmsg{font:700 11px var(--sans);letter-spacing:.3px;color:var(--blue-sky);
+  .waitmsg{font:700 10.5px var(--sans);letter-spacing:.3px;color:var(--blue-sky);
     display:inline-flex;align-items:center;gap:6px;white-space:nowrap;width:fit-content;
     padding:4px 9px;border-radius:7px;
     border:1px solid rgba(94,194,255,.55);background:rgba(47,127,255,.08);
@@ -1285,7 +1197,7 @@
   .c-pap{flex:0 0 96px;overflow:visible}
   .c-send{flex:0 0 150px;display:flex;justify-content:flex-end;overflow:visible}
   .c-reason{flex:1 1 auto;min-width:0;color:var(--amber)}
-  .ftag{font:800 8px var(--mono);letter-spacing:.4px;padding:2px 5px;border-radius:5px;white-space:nowrap}
+  .ftag{font:800 8.5px var(--mono);letter-spacing:.4px;padding:2px 5px;border-radius:5px;white-space:nowrap}
   .ftag.fveg{background:rgba(57,217,138,.16);color:var(--green);box-shadow:inset 0 0 0 1px rgba(57,217,138,.4)}
   .ftag.ficm{background:rgba(111,140,255,.16);color:var(--violet);box-shadow:inset 0 0 0 1px rgba(111,140,255,.4)}
   .ftag.foft{background:rgba(255,176,32,.16);color:var(--amber);box-shadow:inset 0 0 0 1px rgba(255,176,32,.5);cursor:help}
@@ -1301,12 +1213,12 @@
   .segb.okp{color:var(--green)}
   .segb.holdp{color:var(--amber)}
   .segb.holdp:hover{background:rgba(255,176,32,.16)}
-  .papna{font:700 9.5px var(--mono);letter-spacing:.4px;color:var(--dim);
+  .papna{font:700 10px var(--mono);letter-spacing:.4px;color:var(--dim);
     padding:4px 8px;border-radius:6px;background:var(--panel3);border:1px solid var(--line)}
   /* Queue/Docks toggle */
   .ctatabs{display:inline-flex;gap:3px;background:var(--panel3);border:1px solid var(--line);
     border-radius:11px;padding:4px;margin-bottom:18px}
-  .ctatab{font:700 12.5px var(--sans);color:var(--muted);background:transparent;border:0;
+  .ctatab{font:700 13px var(--sans);color:var(--muted);background:transparent;border:0;
     padding:9px 22px;border-radius:var(--r-sm);cursor:pointer;transition:.15s;letter-spacing:-.01em}
   .ctatab:hover{color:var(--ink)}
   .ctatab.active{background:linear-gradient(180deg,#1e3358,#162a48);color:var(--blue-sky);box-shadow:inset 0 0 0 1px rgba(61,165,255,.35)}
@@ -1323,24 +1235,24 @@
   .dcard.free{opacity:.72}
   .dcard.busy.over{box-shadow:inset 4px 0 0 var(--red),0 0 0 1px rgba(255,93,108,.35)}
   .dcard-top{display:flex;align-items:center;gap:8px}
-  .dcard-dock{font:800 17px var(--mono);letter-spacing:.5px;margin-right:auto}
-  .dcard-freelbl{margin:auto;color:var(--dim);font-weight:600;font-size:12.5px}
-  .dcard-veh{font:700 17px var(--mono);letter-spacing:.5px;margin-top:8px}
-  .dcard-sub{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .dcard-timer{font:800 17px var(--mono);letter-spacing:1px;margin-top:9px;line-height:1}
+  .dcard-dock{font:800 15px var(--mono);letter-spacing:.5px;margin-right:auto}
+  .dcard-freelbl{margin:auto;color:var(--dim);font-weight:600;font-size:13px}
+  .dcard-veh{font:700 16px var(--mono);letter-spacing:.5px;margin-top:8px}
+  .dcard-sub{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .dcard-timer{font:800 24px var(--mono);letter-spacing:1px;margin-top:9px;line-height:1}
   .dcard-timer.over{color:var(--red)}
-  .dcard-est{font-size:11px;color:var(--dim);margin-top:2px}
+  .dcard-est{font-size:10.5px;color:var(--dim);margin-top:2px}
   .dcard-bar{height:5px;border-radius:3px;background:var(--panel3);margin:9px 0 12px;overflow:hidden}
   .dcard-bar i{display:block;height:100%;border-radius:3px;background:linear-gradient(90deg,var(--green),var(--amber))}
   .dcard.over .dcard-bar i{background:var(--red)}
   .dcard-btn{width:100%}
-  .cta-send{padding:7px 12px;font-size:11px;white-space:nowrap}
+  .cta-send{padding:7px 12px;font-size:11.5px;white-space:nowrap}
   .cta-send:disabled{opacity:.4}
   .zpill.zchl{cursor:default}
   /* in-yard assign-dock */
   .c-docks{flex:1 1 auto;min-width:0;display:flex;justify-content:flex-end;overflow:visible}
   .dockchips{display:flex;flex-wrap:wrap;gap:5px;justify-content:flex-end}
-  .dchip{font:700 11px var(--mono);padding:5px 11px;border-radius:7px;cursor:pointer;
+  .dchip{font:700 11.5px var(--mono);padding:5px 11px;border-radius:7px;cursor:pointer;
     background:rgba(47,127,255,.16);border:1px solid rgba(94,194,255,.45);color:var(--blue-sky);transition:.14s;white-space:nowrap;
     box-shadow:0 0 8px rgba(47,127,255,.18),inset 0 0 0 1px rgba(94,194,255,.1)}
   .dchip:hover{background:linear-gradient(180deg,#5ec2ff,#2f7fff);color:#03101f;
@@ -1350,7 +1262,7 @@
     box-shadow:0 0 12px rgba(38,210,142,.4),inset 0 0 0 1px rgba(52,228,160,.25)}
   .dchip.rec:hover{background:linear-gradient(180deg,#5ff0bf,#26d28e);color:#03281c;
     box-shadow:0 0 16px rgba(38,210,142,.6)}
-  .yard-enroute{display:inline-flex;align-items:center;gap:7px;font:600 11px var(--sans);color:var(--amber)}
+  .yard-enroute{display:inline-flex;align-items:center;gap:7px;font:600 11.5px var(--sans);color:var(--amber)}
   .yard-enroute .dot{color:var(--amber)}
   /* sync status badge */
   .sync-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px;vertical-align:middle}
@@ -1390,7 +1302,7 @@
   // shared "room" — all devices using the same room code see the same data.
   const FIREBASE_ROOM = "gnsc-main";
   // Build tag — bump this every deploy so you can confirm a device loaded the latest build.
-  window.BUILD_VERSION = "v41m";
+  window.BUILD_VERSION = "v42";
   function firebaseConfigured(){
     return FIREBASE_CONFIG.databaseURL && FIREBASE_CONFIG.databaseURL.indexOf("PASTE_")===-1;
   }
@@ -1430,14 +1342,12 @@
     </div>
   </div>
   <div class="clock" id="clock">--:--:--</div>
-  <div class="hdr-account">
-    <span class="user-badge" id="user_badge" hidden></span>
-    <button class="logout-btn" id="logout_btn" onclick="doLogout()" title="Sign out" hidden>Log out</button>
-  </div>
   <div class="roles" id="roles">
     <button data-r="security">Security · Gate</button>
     <button data-r="warehouse" class="active">Warehouse</button>
   </div>
+  <span class="user-badge" id="user_badge" hidden></span>
+  <button class="logout-btn" id="logout_btn" onclick="doLogout()" title="Sign out" hidden>Log out</button>
 </header>
 
 <main>
@@ -1605,13 +1515,6 @@
         <input id="logsearch" class="logsearch" type="text" placeholder="Search vehicle or vendor…" autocomplete="off">
         <button class="btn ghost sm" id="logexport">⬇ Export CSV</button>
       </div>
-      <div class="light-legend" id="light_legend">
-        <span class="lg"><i class="lg-dot lg-wait"></i>Waiting</span>
-        <span class="lg"><i class="lg-dot lg-dock"></i>On dock</span>
-        <span class="lg"><i class="lg-dot lg-rel"></i>Loaded</span>
-        <span class="lg"><i class="lg-dot lg-grn"></i>GRN</span>
-        <span class="lg"><i class="lg-dot lg-held"></i>On hold</span>
-      </div>
       <div class="panel"><div class="body" style="padding:0" id="todaylist"></div></div>
 
       <div id="grnpending_section" style="display:none;margin-top:22px">
@@ -1723,28 +1626,33 @@
         <span class="danger-caret" id="danger_caret">▸</span>
       </div>
       <div class="danger-zone collapsed" id="danger_body">
-        <div class="ov-danger-row">
+        <div class="ov-diag" id="ov_diag">
+          <div class="ov-diag-t">Sync &amp; rollover status</div>
+          <div class="ov-diag-grid" id="ov_diag_grid">—</div>
+          <button class="btn sm ov-diag-refresh" onclick="renderDiag()" style="margin-top:8px;border-color:var(--blue-sky);color:var(--blue-sky)">↻ Refresh</button>
+        </div>
+        <div class="ov-danger">
           <div>
             <div class="ov-danger-t">Force push to Firebase</div>
             <div class="ov-danger-s">Overwrites the shared data for all devices with what is on THIS device. Use only if this device is correct and sync is stuck.</div>
           </div>
           <button class="btn sm" style="border-color:var(--blue-sky);color:var(--blue-sky)" onclick="forcePushToFirebase()">⬆ Force push</button>
         </div>
-        <div class="ov-danger-row">
+        <div class="ov-danger">
           <div>
             <div class="ov-danger-t">Clear learning data only</div>
             <div class="ov-danger-s">Wipes just the Intelligence averages / unload-time samples. Vehicles, ICMs and the archive are kept. Use to reset stats after trial-run or bad test data.</div>
           </div>
           <button class="btn danger sm" onclick="clearLearningData()">Clear learning</button>
         </div>
-        <div class="ov-danger-row">
+        <div class="ov-danger">
           <div>
             <div class="ov-danger-t">Clear operational data</div>
             <div class="ov-danger-s">Removes all vehicles, ICMs, archive and learning history. Masters (vehicle types, docks, calc times) are kept.</div>
           </div>
           <button class="btn danger sm" onclick="resetData()">Clear data</button>
         </div>
-        <div class="ov-danger-row">
+        <div class="ov-danger">
           <div>
             <div class="ov-danger-t">Log out all devices</div>
             <div class="ov-danger-s">Signs out every phone and PC using DockFlow. Use after an update so all devices reload and sign in fresh.</div>
@@ -1847,10 +1755,8 @@ function applyRole(r){
   document.querySelectorAll('#roles button').forEach(x=>x.classList.toggle('active',x.dataset.r===view));
   document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.dataset.view===view));
   const lo=document.getElementById('logout_btn'); if(lo) lo.hidden=false;
-  // show who is logged in
   const ub=document.getElementById('user_badge');
   if(ub){ ub.textContent=r; ub.hidden=false; }
-  // non-admins must not sit on a restricted sub-tab — bounce them to Overview
   if(!isAdmin){
     const cur=document.querySelector('#wh_subtabs button.active');
     if(cur && ['masters','summary','intel'].includes(cur.dataset.s)){
@@ -1910,6 +1816,7 @@ async function checkForUpdate(){
     }
   }catch(e){ /* offline or fetch blocked — ignore, try again next tick */ }
 }
+
 
 function checkAuth(){
   let saved=null;
@@ -2004,27 +1911,32 @@ async function load(){
       FB_READY=true; fbOk=true;
     }catch(e){ console.error('Firebase read failed, using local',e); FB_READY=false; }
   }
+  // Parse whatever the server gave us (may be null on an empty room).
   let serverState=null;
   if(raw!=null){ try{ serverState=JSON.parse(raw); }catch(e){} }
+  // Parse our local copy too.
   let localState=null;
   const lraw=lsGet();
   if(lraw){ try{ localState=JSON.parse(lraw); }catch(e){} }
 
   if(fbOk){
-    // Firebase reachable → server is authoritative. MERGE local into it so we keep any
-    // record the server lacks but never lose the server's newer records (vehicles added
-    // on other devices). Stops a reopened tab from treating stale localStorage as truth.
+    // Firebase reachable → server is authoritative. MERGE our local copy into it so any
+    // record we hold that the server lacks is preserved AND pushed back, but the server's
+    // newer records (vehicles added on other devices) are never lost. This prevents a
+    // reopened tab from treating its stale localStorage as the source of truth.
     if(serverState && localState){ STATE=mergeStates(localState, serverState); }
     else { STATE = serverState || localState || {}; }
   } else {
+    // Truly offline → local copy is all we have.
     STATE = localState || {};
   }
   normalizeState();
   const m=STATE.masters;
   const empty=!m || ((!m.sizes||!m.sizes.length) && (!m.docks||!m.docks.length));
   if(empty){ STATE.masters=JSON.parse(JSON.stringify(DEFAULT_MASTERS)); mastersSeeded=true; }
-  // Baseline change-tracker to what we loaded, so the first save() doesn't re-stamp every
-  // loaded record as a local edit.
+  // Baseline the change-tracker to what we just loaded. Without this, _lastSavedById is
+  // empty and the first save() re-stamps EVERY loaded vehicle with the current time —
+  // making a reopened stale tab look like it just edited records it merely read.
   rememberSaved();
 }
 
@@ -2041,6 +1953,7 @@ function normalizeState(){
   if(typeof STATE.seq!=='number')    STATE.seq=1;
   if(typeof STATE.icmSeq!=='number') STATE.icmSeq=1;
   if(typeof STATE.historyClearedAt!=='number') STATE.historyClearedAt=0;
+  if(typeof STATE.opsClearedAt!=='number') STATE.opsClearedAt=0;
   // Migration backfill: any record without a per-record timestamp gets a baseline equal
   // to the current clear boundary (or 1 if no clear). This makes grandfathered records
   // SURVIVE the current clearedAt filter, while any genuine future edit (stamped via the
@@ -2070,11 +1983,10 @@ function attachLiveSync(){
       lastSig=sigOf(snapshotState());
       render(); renderSyncBadge();
       FB_APPLYING=false;
-      if(pending){ pending=false; save(); }   // flush a save queued during apply
+      if(pending){ pending=false; save(); }   // flush a save that was queued during apply
       checkRemoteLogout();
-      // NOTE: no automatic re-push here. Each device broadcasts its OWN changes via its
-      // own save(); an auto re-push after every merge caused an infinite ping-pong between
-      // devices (constant re-render that reverted in-progress actions like move-to-yard).
+      // NOTE: no automatic re-push here — it caused an infinite ping-pong between devices
+      // that reverted in-progress actions. Each device broadcasts its own changes via save().
     }catch(e){ console.error('sync apply failed',e); FB_APPLYING=false; }
   });
 }
@@ -2107,11 +2019,10 @@ function stampChanges(){
     const prev=_lastSavedById[key]||{};
     (STATE[key]||[]).forEach(rec=>{
       if(!rec||rec.id==null) return;
-      // NEVER re-stamp a tombstoned (archived/deleted) record. If a stale merge briefly
-      // re-introduced an archived vehicle, stamping it with a fresh updatedAt would make
-      // it newer than its own tombstone and resurrect it permanently — the cause of
-      // gated-out vehicles from a previous day refusing to clear. Leave its old stamp so
-      // the tombstone (updatedAt < tombTime) still removes it on the next merge.
+      // NEVER re-stamp a tombstoned (archived/deleted) record. Stamping a briefly
+      // re-merged archived vehicle with a fresh updatedAt would make it newer than its
+      // own tombstone and resurrect it permanently — why gated-out vehicles from a
+      // previous day refused to clear. Leave its old stamp so the tombstone removes it.
       if(tomb[rec.id]!=null) return;
       const before=prev[rec.id];
       // new record, or contents differ from last save → it changed → stamp it
@@ -2128,7 +2039,7 @@ function rememberSaved(){
 }
 // Merge incoming records into local by id, newest updatedAt wins. Deletions are
 // handled via a tombstone list so a delete on one device propagates.
-function mergeRecords(localArr, incomingArr, tombstones){
+function mergeRecords(localArr, incomingArr, tombstones, clearedAt, bornTs){
   const out={}, tomb=tombstones||{};
   (localArr||[]).forEach(r=>{ if(r&&r.id!=null) out[r.id]=r; });
   (incomingArr||[]).forEach(r=>{
@@ -2142,6 +2053,14 @@ function mergeRecords(localArr, incomingArr, tombstones){
   });
   // drop anything a newer tombstone deleted
   Object.keys(tomb).forEach(id=>{ const td=tomb[id]||0; const rec=out[id]; if(rec && (rec.updatedAt||0) < td) delete out[id]; });
+  // Drop anything CREATED before the last operational clear. Uses the record's stable
+  // creation time (gateTime / createdAt), which never changes, so it can't remove a
+  // genuinely-new record yet reliably removes stale ones from ANY device — even those this
+  // device never tombstoned individually (e.g. a 2-day-old vehicle on a phone that was
+  // offline at clear time). Durable "Clear operational data" guarantee.
+  if(clearedAt>0 && typeof bornTs==='function'){
+    Object.keys(out).forEach(id=>{ const born=bornTs(out[id]); if(born>0 && born < clearedAt) delete out[id]; });
+  }
   return Object.values(out);
 }
 function mergeStates(local, incoming){
@@ -2149,18 +2068,19 @@ function mergeStates(local, incoming){
   const tomb={};
   [local.tombstones,incoming.tombstones].forEach(ts=>{ if(ts) Object.keys(ts).forEach(id=>{ tomb[id]=Math.max(tomb[id]||0, ts[id]||0); }); });
   const merged=Object.assign({}, incoming, local);   // start from local, fill structure
-  merged.vehicles = mergeRecords(local.vehicles, incoming.vehicles, tomb);
-  merged.icms     = mergeRecords(local.icms,     incoming.icms,     tomb);
+  const opsClear = Math.max(local.opsClearedAt||0, incoming.opsClearedAt||0);
+  merged.opsClearedAt = opsClear;
+  merged.vehicles = mergeRecords(local.vehicles, incoming.vehicles, tomb, opsClear, v=>v&&(v.gateTime||0));
+  merged.icms     = mergeRecords(local.icms,     incoming.icms,     tomb, opsClear, m=>m&&(m.createdAt||0));
   // alerts: union by id so an alert raised on one device reaches every device (previously
   // alerts fell through Object.assign and "local wins" clobbered incoming alerts, letting
-  // the alert banner and the actionable vehicle row drift apart). Dismissal must win:
-  // if EITHER copy is seen, the merged alert is seen, so a dismiss propagates everywhere.
+  // the alert banner and the actionable vehicle row drift apart). Dismissal wins: if EITHER
+  // copy is seen, the merged alert is seen, so a dismiss propagates everywhere.
   merged.alerts   = mergeAlerts(local.alerts, incoming.alerts);
   // history & archive are append-only logs → union by a cheap key. But "Delete all data"
-  // must actually stick: a plain union would let any peer still holding the old samples
-  // re-add them on the next merge (why learning data came back after a clear). We honor a
-  // historyClearedAt watermark (max across devices) and keep only entries recorded AFTER
-  // it, so a clear propagates while genuinely new unloads survive.
+  // must actually stick: a plain union lets any peer still holding old samples re-add them
+  // on the next merge (why learning data came back after a clear). Honor a historyClearedAt
+  // watermark (max across devices) and keep only entries recorded AFTER it.
   const histClear = Math.max(local.historyClearedAt||0, incoming.historyClearedAt||0);
   merged.historyClearedAt = histClear;
   const histTs = e => (e && (e.finishedAt || e.doneAt || e.placedAt || e.gateTime || 0)) || 0;
@@ -2171,14 +2091,11 @@ function mergeStates(local, incoming){
   merged.icmSeq = Math.max(local.icmSeq||1, incoming.icmSeq||1);
   // clear/rollover awareness: newest clear wins (tracked for reference).
   // We deliberately DO NOT delete vehicles by (updatedAt < clearedAt) — that blanket
-  // filter also removed legitimate active vehicles whose stamp predated the last clear
-  // (clock skew, or simply not re-saved since the clear), which made called vehicles
-  // vanish and the Move-to-Yard button disappear. Resurrection of genuinely-cleared
-  // records is prevented by per-id tombstones in mergeRecords instead.
+  // filter also removed legitimate active vehicles whose stamp predated the last clear,
+  // making called vehicles vanish. Resurrection is prevented by per-id tombstones instead.
   merged.clearedAt = Math.max(local.clearedAt||0, incoming.clearedAt||0);
-  // lastRollover: take the LATER IST day-key. Using incoming-wins let a peer still on
-  // yesterday's key revert a device that had already rolled to today, causing repeated
-  // re-rolls. String compare is valid because keys are zero-padded YYYY-MM-DD.
+  // lastRollover: take the LATER IST day-key (monotonic). incoming-wins previously let a
+  // peer still on yesterday's key revert a device that had already rolled, causing re-rolls.
   merged.lastRollover = [local.lastRollover, incoming.lastRollover]
     .filter(Boolean).sort().pop() || incoming.lastRollover || local.lastRollover;
   merged.forceLogoutAt = Math.max(local.forceLogoutAt||0, incoming.forceLogoutAt||0);
@@ -2190,8 +2107,8 @@ function mergeStates(local, incoming){
   merged.masters = (lC>0 && iC<lC) ? lM : (incoming.masters||local.masters);
   return merged;
 }
-// Merge alerts by id. Union both sides; if either copy was dismissed (seen), the
-// merged alert stays seen so a dismissal on one device propagates to all.
+// Merge alerts by id. Union both sides; if either copy was dismissed (seen), the merged
+// alert stays seen so a dismissal on one device propagates to all.
 function mergeAlerts(localArr, incomingArr){
   const out={};
   (localArr||[]).forEach(a=>{ if(a&&a.id!=null) out[a.id]=Object.assign({},a); });
@@ -2199,11 +2116,10 @@ function mergeAlerts(localArr, incomingArr){
     if(!a||a.id==null) return;
     const cur=out[a.id];
     if(!cur){ out[a.id]=Object.assign({},a); return; }
-    // keep one copy; seen wins (dismissal is sticky across devices)
     out[a.id]=Object.assign({}, cur, a, { seen: !!(cur.seen||a.seen) });
   });
   let arr=Object.values(out).sort((x,y)=>(x.at||0)-(y.at||0));
-  if(arr.length>60) arr=arr.slice(-60);   // keep bounded, same as addAlert
+  if(arr.length>60) arr=arr.slice(-60);
   return arr;
 }
 function unionLog(a,b){
@@ -2226,8 +2142,6 @@ function toggleDangerZone(){
 }
 
 // FORCE PUSH: overwrite the shared Firebase state with THIS device's current state.
-// Use when this device is known-correct but sync seems stuck or a peer pushed bad data.
-// Bypasses merge — it's a deliberate "my copy wins" admin action, hence the confirm.
 async function forcePushToFirebase(){
   if(!await askConfirm('Force PUSH this device\u2019s data to Firebase?\nThis overwrites the shared state for ALL devices with what is currently on THIS device. Use only if this device is correct and sync is stuck.','Force push',true)) return;
   if(!(FB_READY && FB_REF)){ toast('Not connected to Firebase — cannot force push'); return; }
@@ -2246,7 +2160,8 @@ async function forcePushToFirebase(){
 }
 
 async function save(){
-  if(FB_APPLYING){ pending=true; return; }   // a sync is being applied; queue this save
+  if(FB_APPLYING){ pending=true; return; }   // a sync is being applied right now;
+                                             // queue this save so the change isn't lost
   if(saving){pending=true;return;}
   saving=true;
   stampChanges();                      // mark changed vehicles/icms with a fresh updatedAt
@@ -2254,16 +2169,20 @@ async function save(){
   rememberSaved();                     // remember what we just persisted (for next diff)
   try{
     if(FB_READY && FB_REF){
-      // Write via a MERGE transaction, not a blind set(). A blind set() from a device
-      // whose STATE is missing records another device just added would wipe those newer
-      // records — the "old data keeps coming back" bug. Merging makes every write additive
-      // and newest-wins, so a stale writer can never delete fresh vehicles.
+      // CRITICAL: write via a transaction that MERGES this device's STATE against the
+      // freshest server state, instead of a blind set() that overwrites the whole node.
+      // A blind set() from a device whose STATE is missing records another device just
+      // added (e.g. a tab that reopened with a stale localStorage copy) would wipe those
+      // newer records — the "old data keeps coming back" bug. Merging makes every write
+      // additive and newest-wins, so a stale writer can never delete fresh vehicles.
       const localState=JSON.parse(snapshot);
       const res=await FB_REF.transaction(server=>{
-        if(server==null) return localState;
-        try{ return mergeStates(localState, server); }
+        if(server==null) return localState;            // empty node → seed it
+        try{ return mergeStates(localState, server); }  // union local + server, newest wins
         catch(_){ return localState; }
       });
+      // Adopt the committed merged result so our in-memory STATE matches the server and
+      // we don't immediately re-fight it; refresh lastSig from the authoritative value.
       try{
         const committed = res && res.snapshot && res.snapshot.val ? res.snapshot.val() : null;
         if(committed){
@@ -2279,7 +2198,7 @@ async function save(){
       }catch(_){ lastSig=sigOf(snapshot); lsSet(snapshot); }
     } else {
       lastSig=sigOf(snapshot);
-      lsSet(snapshot);
+      lsSet(snapshot);                 // offline: keep local copy
     }
     storageWarned=false;
   }catch(e){
@@ -2480,7 +2399,7 @@ function askConfirm(msg,okLabel,danger,cancelLabel){
     const done=val=>{
       bg.classList.remove('show');
       ok.onclick=null; cancel.onclick=null; bg.onclick=null;
-      cancel.textContent='Cancel';   // reset for other dialogs
+      cancel.textContent='Cancel';
       resolve(val);
     };
     ok.onclick=()=>done(true);
@@ -2907,37 +2826,36 @@ async function moveToYard(id){
   // Step 1 — Yes/No: did the vehicle actually move to the yard?
   const moved=await askConfirm('Has '+veh+' moved into the '+zone+' yard?','Yes — moved',false,'No');
   // A sync may have REPLACED STATE while the modal was open (Firebase listener does
-  // STATE=mergeStates(...)). Re-resolve the LIVE record before mutating, else the change
-  // lands on a discarded object and never reaches Firebase.
+  // STATE=mergeStates(...)). The `v` captured above can now be an orphan that is no
+  // longer in STATE.vehicles, so mutating it writes to a discarded object and the
+  // change never reaches Firebase — the warehouse's call looks un-actionable.
+  // Re-resolve the LIVE record before any mutation.
   v=STATE.vehicles.find(x=>x.id===id);
   if(!v||v.status!=='call_alert'){ render(); return; }
   if(moved){
     v.status='yard'; v.yardAt=now(); v.alertUntil=0;
-    v.papers = v.papers==='hold' ? 'ok' : v.papers;   // clear any prior not-moved hold
+    v.papers = v.papers==='hold' ? 'ok' : v.papers;
     v.holdReason=''; v.notMoved=null;
     save(); toast(v.veh+' → yard'); render(); return;
   }
   // Step 2 — No: why not?
   const reason=await askChoice('Why has '+veh+' not moved to the yard?',
     ['Driver not available','Vehicle not available']);
-  if(reason==null) return;   // cancelled — leave as-is (still call_alert)
-  v=STATE.vehicles.find(x=>x.id===id);   // re-resolve after second modal
+  if(reason==null) return;
+  // Re-resolve again after the second modal.
+  v=STATE.vehicles.find(x=>x.id===id);
   if(!v||v.status!=='call_alert'){ render(); return; }
 
   if(reason==='Driver not available'){
-    // On hold, but KEEPS its queue position (FIFO time untouched). ETA keeps climbing
-    // because the vehicle is still in the system; queue order does not change.
-    v.status='waiting';                 // back in queue at its original FIFO slot
+    v.status='waiting';
     v.papers='hold';
     v.holdReason='On hold — driver not available';
     v.notMoved={ reason:'driver', at:now() };
     v.alertUntil=0;
-    // NOTE: queueTime / fifoOverride untouched → position unchanged
     save(); toast(v.veh+' on hold — driver not available'); render(); return;
   }
 
   if(reason==='Vehicle not available'){
-    // Vehicle left without unloading → mark done / gated out with a clear remark.
     v.status='done'; v.doneAt=now(); v.finishedAt=now(); v.alertUntil=0;
     v.leftWithoutUnloading=true;
     v.remarks='Left without unloading — Driver left';
@@ -2953,7 +2871,7 @@ async function driverArrived(id){
   v=STATE.vehicles.find(x=>x.id===id);   // re-resolve live record after the modal
   if(!v) return;
   v.status='yard'; v.yardAt=now(); v.alertUntil=0;
-  v.papers = v.papers==='hold' ? 'ok' : v.papers;   // clear the driver-not-available hold
+  v.papers = v.papers==='hold' ? 'ok' : v.papers;
   v.holdReason=''; v.notMoved=null;
   save(); toast(v.veh+' → yard'); render();
 }
@@ -2989,24 +2907,20 @@ async function resetData(){
   if(!await askConfirm('Delete ALL vehicles, ICMs, archive and learning history?\nYour Masters (vehicle types, docks, calc times) are KEPT.\nThis clears data for everyone and cannot be undone.','Delete all data',true))return;
   const keepMasters=STATE.masters;   // preserve configuration
   const ct=now();
-  // Tombstone every existing vehicle/icm id so a stale device cannot resurrect them.
   const tomb=Object.assign({}, STATE.tombstones||{});
   (STATE.vehicles||[]).forEach(v=>{ if(v&&v.id!=null) tomb[v.id]=ct; });
   (STATE.icms||[]).forEach(v=>{ if(v&&v.id!=null) tomb[v.id]=ct; });
-  STATE={vehicles:[],history:[],seq:1,icms:[],icmSeq:1,archive:[],masters:keepMasters,lastRollover:STATE.lastRollover,clearedAt:ct,historyClearedAt:ct,tombstones:tomb};
+  STATE={vehicles:[],history:[],seq:1,icms:[],icmSeq:1,archive:[],masters:keepMasters,lastRollover:STATE.lastRollover,clearedAt:ct,historyClearedAt:ct,opsClearedAt:ct,tombstones:tomb};
   save(); render();
   toast('All vehicle data cleared — masters kept');
 }
-// Clear ONLY the learning/averages history (the Intelligence tab samples). Operational
-// vehicles, ICMs and current archive are untouched. Uses the historyClearedAt watermark
-// so the wipe sticks across devices and a stale peer can't re-add the old samples.
+// Clear ONLY the learning/averages history. Operational vehicles, ICMs and archive are
+// untouched. Uses the historyClearedAt watermark so the wipe sticks across devices.
 async function clearLearningData(){
   const n=(STATE.history||[]).length;
   if(!await askConfirm('Clear all learning data ('+n+' unload sample'+(n===1?'':'s')+')?\nThis resets the Intelligence averages for everyone. Vehicles, ICMs and the archive are kept.\nCannot be undone.','Clear learning data',true)) return;
   const ct=now();
   STATE.history=[];
-  // Bump the watermark just past now so existing samples (recorded before ct) are filtered
-  // out on merge, while any unload completed after this still records normally.
   STATE.historyClearedAt=Math.max(STATE.historyClearedAt||0, ct);
   save(); render();
   toast('Learning data cleared — '+n+' sample'+(n===1?'':'s')+' removed');
@@ -3024,17 +2938,14 @@ async function resetMasters(){
 // Capture the scrollTop of every inner-scrolling container so a re-render (triggered by
 // pressing an action button) doesn't snap long lists back to the top. Inner lists use
 // class .listwrap and are rebuilt via innerHTML, so they have no stable id of their own —
-// we key each one by the id of its nearest stable ancestor (the list "box"). Also handles
-// any element explicitly marked data-keep-scroll, plus #todaylist.
+// we key each one by the id of its nearest stable ancestor. Also handles #todaylist and
+// anything tagged data-keep-scroll.
 function captureScroll(){
   const map={ _winX:window.scrollX, _winY:window.scrollY };
-  // Inner scrolling lists: .listwrap rebuilt via innerHTML → key by nearest stable id.
   document.querySelectorAll('.listwrap').forEach(w=>{
     if(w.scrollTop<=0) return;
     const box=w.closest('[id]'); if(box) map['box:'+box.id]=w.scrollTop;
   });
-  // Stable scroll boxes that scroll directly (no inner listwrap), e.g. #todaylist when its
-  // own element is the overflow container, plus anything tagged data-keep-scroll.
   document.querySelectorAll('[data-keep-scroll][id]').forEach(el=>{ if(el.scrollTop>0) map['kid:'+el.id]=el.scrollTop; });
   const tl=document.getElementById('todaylist'); if(tl && tl.scrollTop>0) map['kid:todaylist']=tl.scrollTop;
   return map;
@@ -3053,8 +2964,7 @@ function restoreScroll(map){
 }
 function render(){
   // Preserve scroll position across the re-render so taking an action (marking zone/papers,
-  // moving to yard, etc.) doesn't jump long lists to the top. Captures the window scroll,
-  // #todaylist, and every inner .listwrap container.
+  // moving to yard, etc.) doesn't jump long lists to the top.
   const _scroll=captureScroll();
   renderSecurity();
   renderWarehouse();
@@ -3063,8 +2973,36 @@ function render(){
   renderMasters();
   refreshVendorList();
   populateSizeDropdown();
-  restoreScroll(_scroll);                          // immediate restore (content is same size)
-  requestAnimationFrame(()=>{ restoreScroll(_scroll); });  // and after paint, to be safe
+  try{ renderDiag(); }catch(_){}
+  restoreScroll(_scroll);                                   // immediate restore
+  requestAnimationFrame(()=>{ restoreScroll(_scroll); });   // and after paint
+}
+// Read-only diagnostic for the Danger Zone: build, IST day + rollover state, ops-clear
+// watermark, and live vehicle counts. Purely informational.
+function renderDiag(){
+  const grid=document.getElementById('ov_diag_grid'); if(!grid) return;
+  const todayKey=istDayKey();
+  const p=istParts();
+  const clock=String(p.h).padStart(2,'0')+':'+String(p.mi).padStart(2,'0');
+  const roll=STATE.lastRollover;
+  const rolledOk = roll===todayKey;
+  const rollTxt = roll===undefined ? '⚠ never (baseline not set)'
+    : (rolledOk ? '✓ '+roll+' (up to date)' : '⚠ '+roll+' (behind — rollover pending)');
+  const vs=STATE.vehicles||[];
+  const cnt=s=>vs.filter(v=>v.status===s).length;
+  const priorDone=vs.filter(v=>isPriorDayDone(v, todayKey)).length;
+  const fmtWm=ts=>ts?new Date(ts).toLocaleString():'never';
+  const rows=[
+    ['Build', (window.BUILD_VERSION||'?')],
+    ['IST now', todayKey+' · '+clock],
+    ['Last rollover', rollTxt],
+    ['Vehicles live', vs.length+'  (wait '+cnt('waiting')+' · dock '+cnt('docked')+' · yard '+cnt('yard')+' · await '+cnt('awaiting')+' · done '+cnt('done')+')'],
+    ['Prior-day done still listed', priorDone? ('⚠ '+priorDone) : '0'],
+    ['Ops-clear watermark', fmtWm(STATE.opsClearedAt)],
+    ['Learning-clear watermark', fmtWm(STATE.historyClearedAt)],
+    ['Learning samples', (STATE.history||[]).length]
+  ];
+  grid.innerHTML=rows.map(([k,v])=>`<div class="ov-diag-row"><span class="ov-diag-k">${esc(k)}</span><span class="ov-diag-v">${esc(String(v))}</span></div>`).join('');
 }
 
 function populateSizeDropdown(){
@@ -3297,9 +3235,9 @@ function renderSecAlerts(){
 // But the alert and the vehicle's status can briefly desync across devices (the alert
 // arrives, the status change hasn't yet), which leaves the alert visible with no row
 // button. This reconciler closes that gap: for any active 'toyard' alert whose vehicle is
-// still at the gate (waiting / no terminal status), it restores 'call_alert' so the row —
-// and its action button — always appears. It never overrides a vehicle that has genuinely
-// moved on (yard/docked/awaiting/done), so a stale alert can't pull a vehicle backward.
+// still at the gate, it restores 'call_alert' so the row — and its action button — always
+// appears whenever the warehouse has requested the move. It never overrides a vehicle that
+// has genuinely moved on (yard/docked/awaiting/done), so a stale alert can't pull it back.
 function reconcileYardCalls(){
   const alerts=(STATE.alerts||[]).filter(a=>!a.seen && a.kind==='toyard');
   if(!alerts.length) return;
@@ -3312,7 +3250,6 @@ function reconcileYardCalls(){
     if(v.status==='yard'||v.status==='docked'||v.status==='awaiting'||v.status==='done'){
       a.seen=true; changed=true; return;            // already moved on → clear stale alert
     }
-    // waiting / unexpected gate state → restore the pending-yard flag from the alert
     v.status='call_alert';
     if(!v.zone && a.zone) v.zone=a.zone;
     if(!v.alertUntil || v.alertUntil<now()) v.alertUntil=now()+30*60000;
@@ -3374,17 +3311,14 @@ function renderSecurity(){
     }).join('')+'</div>';
 }
 function toggleDriver(btn){
-  // find the driver-number span within the same vehicle cell (robust to nesting)
   const cell=btn.closest('.c-veh')||btn.parentElement;
   const num=cell?cell.querySelector('.drv-num'):null;
   if(!num) return;
   const show=num.hasAttribute('hidden');
-  // close any other open popups first
   document.querySelectorAll('.drv-num:not([hidden])').forEach(n=>{ if(n!==num){ n.setAttribute('hidden',''); const b=n.parentElement&&n.parentElement.querySelector('.drv-btn'); if(b)b.classList.remove('on'); } });
   if(show){
     num.removeAttribute('hidden');
     btn.classList.add('on'); btn.setAttribute('title','Hide driver number');
-    // pin as fixed so NO ancestor overflow can clip it
     const r=btn.getBoundingClientRect();
     num.style.position='fixed';
     num.style.left=Math.max(8,r.left)+'px';
@@ -3677,11 +3611,11 @@ function ctaRow(v,i){
 
   let zoneHTML;
   if(v.zoneLocked){
-    zoneHTML=`<span class="zpill zchl" title="Auto-assigned (veggies / ICM)">&#10052;&#65039; &#128274;</span>`;
+    zoneHTML=`<span class="zpill zchl" title="Auto-assigned (veggies / ICM)">Chiller &#128274;</span>`;
   }else{
-    zoneHTML=`<span class="segmini segicons">
-        <button class="segb${v.zone==='ambient'?' on amb':''}" data-cta="zone" data-id="${v.id}" data-z="ambient" title="Ambient" aria-label="Ambient">&#9728;&#65039;</button>
-        <button class="segb${v.zone==='chiller'?' on chl':''}" data-cta="zone" data-id="${v.id}" data-z="chiller" title="Chiller" aria-label="Chiller">&#10052;&#65039;</button>
+    zoneHTML=`<span class="segmini">
+        <button class="segb${v.zone==='ambient'?' on amb':''}" data-cta="zone" data-id="${v.id}" data-z="ambient">Amb</button>
+        <button class="segb${v.zone==='chiller'?' on chl':''}" data-cta="zone" data-id="${v.id}" data-z="chiller">Chl</button>
       </span>`;
   }
 
@@ -3689,11 +3623,11 @@ function ctaRow(v,i){
   if(v.icm||v.papers==='na'){
     pap=`<span class="papna" title="ICM Forward — internal movement, no inbound papers">N/A</span>`;
   }else if(v.papers==='ok'){
-    pap=`<button class="segb on okp papicon" data-pap="ok" data-cta="paperToggle" data-id="${v.id}" title="Papers OK — tap to put on hold" aria-label="Papers OK">&#10003;</button>`;
+    pap=`<button class="segb on okp" data-pap="ok" data-cta="paperToggle" data-id="${v.id}" title="Papers OK — tap to put on hold">&#10003; OK</button>`;
   }else{
-    pap=`<span class="segmini segicons">
-        <button class="segb okp papicon" data-pap="ok" data-cta="paperOk" data-id="${v.id}" title="Papers OK" aria-label="Papers OK">&#10003;</button>
-        <button class="segb holdp papicon" data-pap="hold" data-cta="paperHold" data-id="${v.id}" title="Put papers on hold" aria-label="Hold papers">&#9208;</button>
+    pap=`<span class="segmini">
+        <button class="segb okp" data-pap="ok" data-cta="paperOk" data-id="${v.id}" title="Papers OK">&#10003; OK</button>
+        <button class="segb holdp" data-pap="hold" data-cta="paperHold" data-id="${v.id}" title="Put papers on hold">&#9208; Hold</button>
       </span>`;
   }
 
@@ -3714,11 +3648,12 @@ function ctaRow(v,i){
 
   return `<div class="vrow cta-row${ready?' is-ready':''}${agedCls(v)}">
     <span class="c-pos ${i===0?'next':''}">${i+1}</span>
-    <span class="c-veh mono" title="${esc(v.veh)}${v.driver?' · '+esc(v.driver):''}"><span class="pos-inline${i===0?' next':''}">#${i+1}</span> ${esc(v.veh)}${flagInline}${agedBadge(v,true)}<button class="drv-btn${v.driver?'':' drv-empty'}" data-drv="${esc(v.driver||'')}" title="${v.driver?'Show driver number':'No number on record'}" onclick="toggleDriver(this)">&#128222;</button><span class="drv-num" hidden>${v.driver?esc(v.driver):'No number on record'}</span></span>
+    <span class="c-veh mono" title="${esc(v.veh)}${v.driver?' · '+esc(v.driver):''}">${esc(v.veh)}${flagInline}${agedBadge(v,true)}<button class="drv-btn${v.driver?'':' drv-empty'}" data-drv="${esc(v.driver||'')}" title="${v.driver?'Show driver number':'No number on record'}" onclick="toggleDriver(this)">&#128222;</button><span class="drv-num" hidden>${v.driver?esc(v.driver):'No number on record'}</span></span>
     <span class="c-ven c-ven-edit" data-cta="editSize" data-id="${v.id}" data-size="${esc(v.size||'—')}" title="Tap to correct size (${esc(v.vendor)})">${esc(v.vendor)}${v.icm&&v.dest?' · '+esc(v.dest):''}</span>
     <button class="c-sz c-sz-edit" data-cta="editSize" data-id="${v.id}" title="Tap to correct vehicle size">${esc(v.size||'—')} ✎</button>
     <span class="c-status">${statusHTML}</span>
-    <span class="cta-controls"><span class="c-zone2">${zoneHTML}</span><span class="c-pap">${pap}</span></span>
+    <span class="c-zone2">${zoneHTML}</span>
+    <span class="c-pap">${pap}</span>
     <span class="c-send">${send}</span>
   </div>`;
 }
@@ -3736,27 +3671,23 @@ function ctaSetZone(id,zone){
   const v=STATE.vehicles.find(x=>x.id===id); if(!v||v.zoneLocked) return;
   v.zone=zone; save(); render();
 }
-// Warehouse correction: Security sometimes logs the wrong vehicle size at the gate.
-// Allow changing it any time BEFORE the vehicle is placed on a dock (waiting / called /
-// in yard). Once on dock or beyond, size is locked (it drove the dock-fit decision).
+// Warehouse correction: change a wrongly-logged size any time BEFORE the vehicle is on a
+// dock (waiting / called / in yard). Locked once docked.
 async function editVehicleSize(id){
   let v=STATE.vehicles.find(x=>x.id===id); if(!v) return;
-  if(['docked','awaiting','done'].includes(v.status)){
-    toast('Size is locked once the vehicle is on a dock'); return;
-  }
+  if(['docked','awaiting','done'].includes(v.status)){ toast('Size is locked once the vehicle is on a dock'); return; }
   const sizes=sizeList();
   if(!sizes.length){ toast('No vehicle sizes defined in Masters'); return; }
   const pick=await askChoice('Correct vehicle size for '+v.veh+'\n(current: '+(v.size||'—')+')', sizes);
-  if(pick==null) return;                          // cancelled
-  v=STATE.vehicles.find(x=>x.id===id); if(!v) return;   // re-resolve after the modal
+  if(pick==null) return;
+  v=STATE.vehicles.find(x=>x.id===id); if(!v) return;
   if(['docked','awaiting','done'].includes(v.status)){ render(); return; }
   if(pick===v.size){ render(); return; }
   const old=v.size; v.size=pick;
   save(); render();
   toast(v.veh+' size corrected: '+(old||'—')+' → '+pick);
 }
-// Admin: flag a vehicle as broken down (any stage). It stays in the system with a clear
-// BREAKDOWN marker; toggling again clears the flag. Does not change queue position.
+// Admin: flag/clear a breakdown on a vehicle at any stage. Stays in the list with a marker.
 async function markBreakdown(id){
   let v=STATE.vehicles.find(x=>x.id===id); if(!v) return;
   if(v.breakdown){
@@ -3766,13 +3697,12 @@ async function markBreakdown(id){
     save(); render(); toast(v.veh+' — breakdown cleared'); return;
   }
   const reason=await askReason('Mark '+v.veh+' as broken down?\nThis flags it for the team; it stays in the list until you delete or gate it out.','e.g. engine failure, tyre burst, awaiting mechanic…');
-  if(reason==null) return;                       // cancelled
-  v=STATE.vehicles.find(x=>x.id===id); if(!v) return;   // re-resolve after modal
+  if(reason==null) return;
+  v=STATE.vehicles.find(x=>x.id===id); if(!v) return;
   v.breakdown=true; v.breakdownReason=(reason||'').trim()||'Vehicle breakdown';
   save(); render(); toast(v.veh+' marked as broken down');
 }
-// Admin: permanently remove a vehicle from the system. Tombstones the id so a stale
-// device cannot resurrect it via the merge. Use for test/erroneous entries.
+// Admin: permanently remove a vehicle. Tombstones the id so the merge can't resurrect it.
 async function deleteVehicle(id){
   let v=STATE.vehicles.find(x=>x.id===id); if(!v) return;
   const label=v.veh;
@@ -4268,8 +4198,6 @@ function renderToday(){
     .sort((a,b)=>a.gateTime-b.gateTime);   // earliest gate entry first
 
   // PENDING-GRN deck: previous-day vehicles whose GRN is not done.
-  // grnEligible(v) excludes ICMs, loading-purpose, and left-without-unloading — they
-  // never need a GRN, so they must not appear here.
   const grnPending=STATE.vehicles
     .filter(v=>!enteredToday(v) && unloaded(v) && grnEligible(v) && v.grn!=='done')
     .sort((a,b)=>a.gateTime-b.gateTime);
@@ -4604,7 +4532,7 @@ function renderBoard(){
       : (wait>0?fmtMin(mins(wait)):'now');
     const predTime = noZone ? '<span style="color:var(--dim)">—</span>'
       : noDock ? '<span style="color:var(--red)">—</span>'
-      : (wait>0?fmtDateTime(dockAt):fmtClock(dockAt));   // time only; predWait shows "now"
+      : (wait>0?fmtDateTime(dockAt):fmtClock(dockAt)+' · now');
     const dim = noZone||noDock;
     return `<tr class="${agedCls(v).trim()}">
       <td class="mono" data-label="#">${i+1}</td>
@@ -5366,16 +5294,6 @@ async function sync(){
     STATE=mergeStates(STATE, incoming); normalizeState(); rememberSaved();
     lastSig=sigOf(snapshotState()); render(); renderSyncBadge();
     checkRemoteLogout();
-    return;
-    // (legacy masters guard retained below but unreachable — merge handles masters)
-    // Masters locally authoritative: never let an empty/smaller incoming wipe them.
-    const localM=STATE.masters||{}, inM=incoming.masters||{};
-    const localCount=((localM.sizes||[]).length)+((localM.docks||[]).length);
-    const inCount=((inM.sizes||[]).length)+((inM.docks||[]).length);
-    let keptMasters=false;
-    if(localCount>0 && inCount<localCount){ incoming.masters=localM; keptMasters=true; }
-    STATE=incoming; normalizeState(); lastSig=sig; render(); renderSyncBadge();
-    if(keptMasters){ save(); }
   }catch(e){}
 }
 async function refreshData(){
@@ -5474,10 +5392,9 @@ function grnEligible(v){
 }
 
 /* ---- Midnight rollover: archive gated-out vehicles out of live views ---- */
-// A vehicle counts as "from a previous IST day" if the day it was gated out (doneAt, or
-// gateTime as a fallback) is before today's IST day. We archive those regardless of the
-// once-per-day flag, so leftovers can never linger just because some device already
-// stamped lastRollover for today.
+// A vehicle is "from a previous IST day" if its gate-out day (doneAt, else gateTime) is
+// before today's IST day. We archive those regardless of the once-per-day flag, so
+// leftovers can't linger because some device already stamped lastRollover for today.
 function isPriorDayDone(v, todayKey){
   if(!v || v.status!=='done') return false;
   const ts = v.doneAt || v.finishedAt || v.gateTime || 0;
@@ -5497,8 +5414,8 @@ function archiveDone(doneList){
 function dailyRollover(){
   const todayKey=istDayKey();                    // IST calendar day, same on every device
   // Always sweep out any gated-out vehicle from a PRIOR IST day, even if lastRollover
-  // already equals today (covers the case where a device set the baseline for today while
-  // yesterday's released vehicles were still in the list — they'd otherwise never clear).
+  // already equals today (covers a device that set today's baseline while yesterday's
+  // released vehicles were still in the list — they'd otherwise never clear).
   const stale=STATE.vehicles.filter(v=>isPriorDayDone(v, todayKey));
   if(stale.length){
     archiveDone(stale);
@@ -5510,13 +5427,10 @@ function dailyRollover(){
   }
 
   if(STATE.lastRollover===todayKey){
-    // Already rolled today; if we cleared stragglers above, persist + repaint.
     if(stale.length){ STATE.lastRollover=todayKey; save(); render();
       toast('Cleared '+stale.length+' released vehicle'+(stale.length>1?'s':'')+' from a previous day'); }
     return;
   }
-  // First run ever (no prior flag): set the baseline. We've ALREADY purged prior-day
-  // releases above, so this no longer leaves yesterday's vehicles behind.
   if(STATE.lastRollover===undefined){
     STATE.lastRollover=todayKey; save();
     if(stale.length){ render(); toast('Cleared '+stale.length+' released vehicle'+(stale.length>1?'s':'')+' from a previous day'); }
@@ -5532,8 +5446,7 @@ function dailyRollover(){
   STATE.vehicles.forEach(v=>{ v.updatedAt=rt; });
   (STATE.icms||[]).forEach(v=>{ v.updatedAt=rt; });
   save(); render();
-  const total=done.length;   // 'stale' is a subset already counted in done when same-run
-  if(total) toast('New day (IST) — '+total+' completed vehicle'+(total>1?'s':'')+' archived');
+  if(done.length) toast('New day (IST) — '+done.length+' completed vehicle'+(done.length>1?'s':'')+' archived');
 }
 </script>
 <div id="build_tag" class="build-tag"></div>
