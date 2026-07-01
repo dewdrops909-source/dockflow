@@ -357,6 +357,12 @@
   .danger-zone .ov-danger{margin-top:14px;border:none;background:transparent;padding:12px 0}
   .danger-zone .ov-danger:first-child{margin-top:6px}
   .danger-zone .ov-danger+.ov-danger{border-top:1px solid rgba(255,93,108,.2)}
+  .ov-diag{margin-bottom:6px;padding:12px 14px;border:1px solid rgba(94,194,255,.28);border-radius:10px;background:rgba(47,127,255,.05)}
+  .ov-diag-t{font:700 11px var(--mono);letter-spacing:.6px;text-transform:uppercase;color:var(--blue-sky);margin-bottom:8px}
+  .ov-diag-row{display:flex;justify-content:space-between;gap:10px;padding:4px 0;border-bottom:1px solid rgba(120,150,190,.1);font-size:12.5px}
+  .ov-diag-row:last-of-type{border-bottom:none}
+  .ov-diag-k{color:var(--muted);flex:0 0 auto}
+  .ov-diag-v{color:var(--ink);text-align:right;font-family:var(--mono);font-size:11.5px}
   /* >24h on site — escalating flag across all views */
   .aged{box-shadow:inset 0 0 0 1.5px rgba(255,176,32,.8)!important;border-radius:8px}
   .aged-2{box-shadow:inset 0 0 0 1.5px rgba(255,127,80,.85)!important}
@@ -1296,7 +1302,7 @@
   // shared "room" — all devices using the same room code see the same data.
   const FIREBASE_ROOM = "gnsc-main";
   // Build tag — bump this every deploy so you can confirm a device loaded the latest build.
-  window.BUILD_VERSION = "v41";
+  window.BUILD_VERSION = "v42";
   function firebaseConfigured(){
     return FIREBASE_CONFIG.databaseURL && FIREBASE_CONFIG.databaseURL.indexOf("PASTE_")===-1;
   }
@@ -1620,6 +1626,11 @@
         <span class="danger-caret" id="danger_caret">▸</span>
       </div>
       <div class="danger-zone collapsed" id="danger_body">
+        <div class="ov-diag" id="ov_diag">
+          <div class="ov-diag-t">Sync &amp; rollover status</div>
+          <div class="ov-diag-grid" id="ov_diag_grid">—</div>
+          <button class="btn sm ov-diag-refresh" onclick="renderDiag()" style="margin-top:8px;border-color:var(--blue-sky);color:var(--blue-sky)">↻ Refresh</button>
+        </div>
         <div class="ov-danger">
           <div>
             <div class="ov-danger-t">Force push to Firebase</div>
@@ -1942,6 +1953,7 @@ function normalizeState(){
   if(typeof STATE.seq!=='number')    STATE.seq=1;
   if(typeof STATE.icmSeq!=='number') STATE.icmSeq=1;
   if(typeof STATE.historyClearedAt!=='number') STATE.historyClearedAt=0;
+  if(typeof STATE.opsClearedAt!=='number') STATE.opsClearedAt=0;
   // Migration backfill: any record without a per-record timestamp gets a baseline equal
   // to the current clear boundary (or 1 if no clear). This makes grandfathered records
   // SURVIVE the current clearedAt filter, while any genuine future edit (stamped via the
@@ -2027,7 +2039,7 @@ function rememberSaved(){
 }
 // Merge incoming records into local by id, newest updatedAt wins. Deletions are
 // handled via a tombstone list so a delete on one device propagates.
-function mergeRecords(localArr, incomingArr, tombstones){
+function mergeRecords(localArr, incomingArr, tombstones, clearedAt, bornTs){
   const out={}, tomb=tombstones||{};
   (localArr||[]).forEach(r=>{ if(r&&r.id!=null) out[r.id]=r; });
   (incomingArr||[]).forEach(r=>{
@@ -2041,6 +2053,14 @@ function mergeRecords(localArr, incomingArr, tombstones){
   });
   // drop anything a newer tombstone deleted
   Object.keys(tomb).forEach(id=>{ const td=tomb[id]||0; const rec=out[id]; if(rec && (rec.updatedAt||0) < td) delete out[id]; });
+  // Drop anything CREATED before the last operational clear. Uses the record's stable
+  // creation time (gateTime / createdAt), which never changes, so it can't remove a
+  // genuinely-new record yet reliably removes stale ones from ANY device — even those this
+  // device never tombstoned individually (e.g. a 2-day-old vehicle on a phone that was
+  // offline at clear time). Durable "Clear operational data" guarantee.
+  if(clearedAt>0 && typeof bornTs==='function'){
+    Object.keys(out).forEach(id=>{ const born=bornTs(out[id]); if(born>0 && born < clearedAt) delete out[id]; });
+  }
   return Object.values(out);
 }
 function mergeStates(local, incoming){
@@ -2048,8 +2068,10 @@ function mergeStates(local, incoming){
   const tomb={};
   [local.tombstones,incoming.tombstones].forEach(ts=>{ if(ts) Object.keys(ts).forEach(id=>{ tomb[id]=Math.max(tomb[id]||0, ts[id]||0); }); });
   const merged=Object.assign({}, incoming, local);   // start from local, fill structure
-  merged.vehicles = mergeRecords(local.vehicles, incoming.vehicles, tomb);
-  merged.icms     = mergeRecords(local.icms,     incoming.icms,     tomb);
+  const opsClear = Math.max(local.opsClearedAt||0, incoming.opsClearedAt||0);
+  merged.opsClearedAt = opsClear;
+  merged.vehicles = mergeRecords(local.vehicles, incoming.vehicles, tomb, opsClear, v=>v&&(v.gateTime||0));
+  merged.icms     = mergeRecords(local.icms,     incoming.icms,     tomb, opsClear, m=>m&&(m.createdAt||0));
   // alerts: union by id so an alert raised on one device reaches every device (previously
   // alerts fell through Object.assign and "local wins" clobbered incoming alerts, letting
   // the alert banner and the actionable vehicle row drift apart). Dismissal wins: if EITHER
@@ -2888,7 +2910,7 @@ async function resetData(){
   const tomb=Object.assign({}, STATE.tombstones||{});
   (STATE.vehicles||[]).forEach(v=>{ if(v&&v.id!=null) tomb[v.id]=ct; });
   (STATE.icms||[]).forEach(v=>{ if(v&&v.id!=null) tomb[v.id]=ct; });
-  STATE={vehicles:[],history:[],seq:1,icms:[],icmSeq:1,archive:[],masters:keepMasters,lastRollover:STATE.lastRollover,clearedAt:ct,historyClearedAt:ct,tombstones:tomb};
+  STATE={vehicles:[],history:[],seq:1,icms:[],icmSeq:1,archive:[],masters:keepMasters,lastRollover:STATE.lastRollover,clearedAt:ct,historyClearedAt:ct,opsClearedAt:ct,tombstones:tomb};
   save(); render();
   toast('All vehicle data cleared — masters kept');
 }
@@ -2951,8 +2973,36 @@ function render(){
   renderMasters();
   refreshVendorList();
   populateSizeDropdown();
+  try{ renderDiag(); }catch(_){}
   restoreScroll(_scroll);                                   // immediate restore
   requestAnimationFrame(()=>{ restoreScroll(_scroll); });   // and after paint
+}
+// Read-only diagnostic for the Danger Zone: build, IST day + rollover state, ops-clear
+// watermark, and live vehicle counts. Purely informational.
+function renderDiag(){
+  const grid=document.getElementById('ov_diag_grid'); if(!grid) return;
+  const todayKey=istDayKey();
+  const p=istParts();
+  const clock=String(p.h).padStart(2,'0')+':'+String(p.mi).padStart(2,'0');
+  const roll=STATE.lastRollover;
+  const rolledOk = roll===todayKey;
+  const rollTxt = roll===undefined ? '⚠ never (baseline not set)'
+    : (rolledOk ? '✓ '+roll+' (up to date)' : '⚠ '+roll+' (behind — rollover pending)');
+  const vs=STATE.vehicles||[];
+  const cnt=s=>vs.filter(v=>v.status===s).length;
+  const priorDone=vs.filter(v=>isPriorDayDone(v, todayKey)).length;
+  const fmtWm=ts=>ts?new Date(ts).toLocaleString():'never';
+  const rows=[
+    ['Build', (window.BUILD_VERSION||'?')],
+    ['IST now', todayKey+' · '+clock],
+    ['Last rollover', rollTxt],
+    ['Vehicles live', vs.length+'  (wait '+cnt('waiting')+' · dock '+cnt('docked')+' · yard '+cnt('yard')+' · await '+cnt('awaiting')+' · done '+cnt('done')+')'],
+    ['Prior-day done still listed', priorDone? ('⚠ '+priorDone) : '0'],
+    ['Ops-clear watermark', fmtWm(STATE.opsClearedAt)],
+    ['Learning-clear watermark', fmtWm(STATE.historyClearedAt)],
+    ['Learning samples', (STATE.history||[]).length]
+  ];
+  grid.innerHTML=rows.map(([k,v])=>`<div class="ov-diag-row"><span class="ov-diag-k">${esc(k)}</span><span class="ov-diag-v">${esc(String(v))}</span></div>`).join('');
 }
 
 function populateSizeDropdown(){
